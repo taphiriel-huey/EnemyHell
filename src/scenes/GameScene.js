@@ -674,7 +674,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: "16px",
       color: "#d6bd91",
     }).setOrigin(0.5);
-    const hint = this.add.text(640, 276, "Waehle eine Vorbereitung fuer den naechsten Abschnitt.", {
+    const hint = this.add.text(640, 276, "Waehle eine Belohnung fuer den naechsten Abschnitt.", {
       fontFamily: "Arial, sans-serif",
       fontSize: "15px",
       color: "#bfa985",
@@ -684,44 +684,63 @@ export class GameScene extends Phaser.Scene {
 
     const healCost = 35;
     const options = [
-      createIntermissionOption(this, 402, 336, "1", "Wunden binden", `${healCost} Gold`, "+45 HP vor Abschnitt 2", depth + 2, this.gold >= healCost, () => {
+      createIntermissionOption(this, 402, 366, "1", "Wunden binden", `${healCost} Gold`, "+45 HP vor Abschnitt 2", depth + 2, this.gold >= healCost, () => {
         this.gold -= healCost;
         this.player.hp = Math.min(this.player.maxHp, this.player.hp + 45);
         overlay.destroy();
         this.startSection(2);
       }),
-      createIntermissionOption(this, 640, 336, "2", "Arkaner Atem", "frei", "Mana voll auffuellen", depth + 2, true, () => {
+      createIntermissionOption(this, 640, 366, "2", "Arkaner Atem", "frei", "Mana voll auffuellen", depth + 2, true, () => {
         this.player.mana = this.player.maxMana;
         overlay.destroy();
         this.startSection(2);
       }),
-      createIntermissionOption(this, 878, 336, "3", "Karte studieren", "frei", "Eine Karte waehlen", depth + 2, true, () => {
+      createIntermissionOption(this, 878, 366, "3", "Karte studieren", "frei", "Eine Karte waehlen", depth + 2, true, () => {
         overlay.destroy();
         this.openIntermissionCards();
       }),
     ];
 
-    const proceed = createEndButton(this, 640, 548, "OHNE RAST WEITER", depth + 2, () => {
-      overlay.destroy();
-      this.startSection(2);
-    });
-    const foot = this.add.text(640, 616, "1-3 waehlen   Enter: ohne Rast weiter", { fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#8f846f" }).setOrigin(0.5);
-    overlay.add([dim, g, title, body, stats, hint, ...options.flatMap((option) => option.parts), proceed.button, proceed.hit, foot]);
-    const optionKeys = [
-      () => options[0].action(),
-      () => options[1].action(),
-      () => options[2].action(),
-    ];
-    this.input.keyboard.once("keydown-ONE", optionKeys[0]);
-    this.input.keyboard.once("keydown-TWO", optionKeys[1]);
-    this.input.keyboard.once("keydown-THREE", optionKeys[2]);
-    const proceedKey = () => proceed.action();
-    this.input.keyboard.once("keydown-ENTER", proceedKey);
+    let selected = options[2].enabled ? 2 : options.findIndex((option) => option.enabled);
+    if (selected < 0) selected = 0;
+    const selectOption = (index) => {
+      selected = index;
+      options.forEach((option, optionIndex) => option.setSelected(optionIndex === selected));
+    };
+    selectOption(selected);
+    const foot = this.add.text(640, 616, "Pfeile/A-D wechseln   Enter bestaetigt   1-3 Direktwahl", { fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#8f846f" }).setOrigin(0.5);
+    overlay.add([dim, g, title, body, stats, hint, ...options.flatMap((option) => option.parts), foot]);
+    const moveSelection = (dir) => {
+      for (let step = 1; step <= options.length; step += 1) {
+        const next = (selected + dir * step + options.length) % options.length;
+        if (options[next].enabled) {
+          selectOption(next);
+          return;
+        }
+      }
+    };
+    const onKeyDown = (event) => {
+      const key = event.key.toLowerCase();
+      if (key === "arrowleft" || key === "a") {
+        moveSelection(-1);
+        event.preventDefault();
+      }
+      if (key === "arrowright" || key === "d") {
+        moveSelection(1);
+        event.preventDefault();
+      }
+      if (key === "enter" || key === " ") {
+        options[selected]?.action();
+        event.preventDefault();
+      }
+      if (["1", "2", "3"].includes(key)) {
+        options[Number(key) - 1]?.action();
+        event.preventDefault();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
     overlay.once("destroy", () => {
-      this.input.keyboard.off("keydown-ONE", optionKeys[0]);
-      this.input.keyboard.off("keydown-TWO", optionKeys[1]);
-      this.input.keyboard.off("keydown-THREE", optionKeys[2]);
-      this.input.keyboard.off("keydown-ENTER", proceedKey);
+      window.removeEventListener("keydown", onKeyDown);
     });
   }
 
@@ -737,6 +756,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   startSection(sectionId) {
+    this.pressedKeys.clear();
+    this.heldKeys.clear();
     this.section = sectionId;
     this.pausedForSection = false;
     this.victory = false;
@@ -921,9 +942,9 @@ function drawSectionPanel(g) {
   g.fillRoundedRect(330, 88, 620, 560, 5);
   g.strokeRoundedRect(330, 88, 620, 560, 5);
   g.fillStyle(0x1d1416, 0.76);
-  g.fillRoundedRect(370, 306, 540, 154, 4);
+  g.fillRoundedRect(370, 296, 540, 204, 4);
   g.lineStyle(1, 0x6f5638, 0.75);
-  g.strokeRoundedRect(370, 306, 540, 154, 4);
+  g.strokeRoundedRect(370, 296, 540, 204, 4);
 }
 
 function createIntermissionOption(scene, x, y, hotkey, title, price, body, depth, enabled, action) {
@@ -940,25 +961,36 @@ function createIntermissionOption(scene, x, y, hotkey, title, price, body, depth
     wordWrap: { width: 150 },
   }).setOrigin(0.5).setDepth(depth + 1);
   const hit = scene.add.zone(x, y, 170, 116).setDepth(depth + 2).setInteractive({ useHandCursor: enabled });
-  hit.on("pointerover", () => drawIntermissionOption(g, x, y, enabled, true));
-  hit.on("pointerout", () => drawIntermissionOption(g, x, y, enabled, false));
+  let selected = false;
+  const redraw = (hover = false) => drawIntermissionOption(g, x, y, enabled, hover, selected);
+  hit.on("pointerover", () => redraw(true));
+  hit.on("pointerout", () => redraw(false));
   hit.on("pointerup", () => {
     if (enabled) action();
   });
   return {
+    enabled,
     action: () => {
       if (enabled) action();
+    },
+    setSelected: (value) => {
+      selected = value;
+      redraw(false);
     },
     parts: [g, keyText, titleText, priceText, bodyText, hit],
   };
 }
 
-function drawIntermissionOption(g, x, y, enabled, hover) {
+function drawIntermissionOption(g, x, y, enabled, hover, selected = false) {
   g.clear();
-  g.fillStyle(enabled ? (hover ? 0x24191d : 0x141116) : 0x0d0c10, enabled ? 0.96 : 0.72);
-  g.lineStyle(hover ? 2 : 1, enabled ? (hover ? 0xffd38d : 0x9d7442) : 0x4f4242, enabled ? 0.95 : 0.6);
+  g.fillStyle(enabled ? (hover || selected ? 0x24191d : 0x141116) : 0x0d0c10, enabled ? 0.96 : 0.72);
+  g.lineStyle(selected ? 3 : hover ? 2 : 1, enabled ? (selected ? 0xffdf9d : hover ? 0xffd38d : 0x9d7442) : 0x4f4242, enabled ? 0.95 : 0.6);
   g.fillRoundedRect(x - 85, y - 58, 170, 116, 4);
   g.strokeRoundedRect(x - 85, y - 58, 170, 116, 4);
+  if (selected && enabled) {
+    g.fillStyle(0xffdf9d, 0.12);
+    g.fillRoundedRect(x - 89, y - 62, 178, 124, 5);
+  }
 }
 
 function addPauseRows(scene, rows, x, y) {
