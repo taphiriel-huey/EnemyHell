@@ -36,6 +36,51 @@ const CARD_POOL = [
     },
   },
   {
+    title: "Glutkern",
+    body: "Feuer verursacht mehr Schaden. Stapelbar.",
+    apply: (spells) => {
+      spells.fireDamageMultiplier *= 1.16;
+    },
+  },
+  {
+    title: "Breiter Brand",
+    body: "Feuer trifft groessere Flaechen, kostet etwas mehr Mana. Stapelbar.",
+    apply: (spells) => {
+      spells.fireSize += 0.12;
+      spells.spells.fire.manaCost += 4;
+    },
+  },
+  {
+    title: "Druckwelle",
+    body: "Feuer stoesst Gegner staerker zurueck. Stapelbar.",
+    apply: (spells) => {
+      spells.fireKnockbackMultiplier *= 1.14;
+    },
+  },
+  {
+    title: "Sparsame Zuendung",
+    body: "Feuer kostet weniger Mana, verliert aber etwas Wucht. Stapelbar.",
+    apply: (spells) => {
+      spells.spells.fire.manaCost = Math.max(36, spells.spells.fire.manaCost - 7);
+      spells.fireKnockbackMultiplier *= 0.96;
+    },
+  },
+  {
+    title: "Kurze Beschwoerung",
+    body: "Feuer-Cooldown sinkt leicht. Stapelbar.",
+    apply: (spells) => {
+      spells.spells.fire.cooldown = Math.max(4.8, spells.spells.fire.cooldown * 0.9);
+      spells.spells.fire.currentCooldown = Math.min(spells.spells.fire.currentCooldown, spells.spells.fire.cooldown);
+    },
+  },
+  {
+    title: "Nachbrand",
+    body: "Brennende Gegner bleiben laenger brennbar. Stapelbar.",
+    apply: (spells) => {
+      spells.traits.burningDuration += 0.55;
+    },
+  },
+  {
     title: "Schnelle Formel",
     body: "Feuer-Cooldown -20%, Manakosten +15%.",
     apply: (spells) => {
@@ -62,6 +107,51 @@ const CARD_POOL = [
     },
   },
   {
+    title: "Geladene Spitze",
+    body: "Blitz verursacht mehr Hauptschaden. Stapelbar.",
+    apply: (spells) => {
+      spells.lightningDamageMultiplier *= 1.14;
+    },
+  },
+  {
+    title: "Springerfunken",
+    body: "Blitz springt auf ein weiteres Ziel. Stapelbar.",
+    apply: (spells) => {
+      spells.chainTargets += 1;
+    },
+  },
+  {
+    title: "Seitenentladung",
+    body: "Blitz-Splash gegen Kleingegner wird staerker. Stapelbar.",
+    apply: (spells) => {
+      spells.lightningSplashDamageMultiplier *= 1.25;
+    },
+  },
+  {
+    title: "Lange Leitung",
+    body: "Blitz findet Ziele aus groesserer Entfernung. Stapelbar.",
+    apply: (spells) => {
+      spells.lightningRange += 42;
+    },
+  },
+  {
+    title: "Statische Formel",
+    body: "Blitz-Cooldown sinkt leicht, Manakosten steigen etwas. Stapelbar.",
+    apply: (spells) => {
+      spells.spells.lightning.cooldown = Math.max(2.2, spells.spells.lightning.cooldown * 0.9);
+      spells.spells.lightning.currentCooldown = Math.min(spells.spells.lightning.currentCooldown, spells.spells.lightning.cooldown);
+      spells.spells.lightning.manaCost += 3;
+    },
+  },
+  {
+    title: "Duennere Ader",
+    body: "Blitz kostet weniger Mana, verursacht etwas weniger Schaden. Stapelbar.",
+    apply: (spells) => {
+      spells.spells.lightning.manaCost = Math.max(18, spells.spells.lightning.manaCost - 4);
+      spells.lightningDamageMultiplier *= 0.96;
+    },
+  },
+  {
     title: "Frostreserve",
     body: "Frost-Cooldown sinkt, wenn mindestens sechs Gegner getroffen werden.",
     apply: (spells) => {
@@ -69,10 +159,60 @@ const CARD_POOL = [
     },
   },
   {
+    title: "Eissplitter",
+    body: "Frost verursacht mehr Schaden. Stapelbar.",
+    apply: (spells) => {
+      spells.frostDamageMultiplier *= 1.22;
+    },
+  },
+  {
+    title: "Frostfront",
+    body: "Frost trifft eine groessere Flaeche. Stapelbar.",
+    apply: (spells) => {
+      spells.frostRadius += 16;
+    },
+  },
+  {
+    title: "Tiefkaelte",
+    body: "Frost verlangsamt und friert laenger. Stapelbar.",
+    apply: (spells) => {
+      spells.frostDuration += 0.38;
+    },
+  },
+  {
+    title: "Kalte Formel",
+    body: "Frost kostet weniger Mana. Stapelbar.",
+    apply: (spells) => {
+      spells.spells.frost.manaCost = Math.max(16, spells.spells.frost.manaCost - 4);
+    },
+  },
+  {
+    title: "Schneller Winter",
+    body: "Frost-Cooldown sinkt leicht. Stapelbar.",
+    apply: (spells) => {
+      spells.spells.frost.cooldown = Math.max(2.8, spells.spells.frost.cooldown * 0.9);
+      spells.spells.frost.currentCooldown = Math.min(spells.spells.frost.currentCooldown, spells.spells.frost.cooldown);
+    },
+  },
+  {
     title: "Stabdisziplin",
     body: "Stabtreffer reduzieren den zuletzt genutzten Zauber-Cooldown.",
     apply: (spells) => {
       spells.traits.staffDiscipline += 0.18;
+    },
+  },
+  {
+    title: "Griffband",
+    body: "Stabtreffer geben etwas mehr Mana. Stapelbar.",
+    apply: (spells) => {
+      spells.meleeManaMultiplier += 0.18;
+    },
+  },
+  {
+    title: "Ruhige Haende",
+    body: "Stab-Finisher erzeugt etwas mehr arkanen Nachdruck. Stapelbar.",
+    apply: (spells) => {
+      spells.traits.staffFinisherWave += 0.12;
     },
   },
   {

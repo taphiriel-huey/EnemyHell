@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=frost-area-mask-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=frost-area-mask-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=frost-area-mask-1";
-import { GameScene } from "./scenes/GameScene.js?v=frost-area-mask-1";
+import { BootScene } from "./scenes/BootScene.js?v=more-cards-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=more-cards-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=more-cards-1";
+import { GameScene } from "./scenes/GameScene.js?v=more-cards-1";
 
 const config = {
   type: Phaser.AUTO,

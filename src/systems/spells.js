@@ -5,6 +5,11 @@ export function createSpellState() {
     fireSize: 1,
     fireDamageMultiplier: 1,
     fireKnockbackMultiplier: 1,
+    lightningRange: 480,
+    lightningDamageMultiplier: 1,
+    lightningSplashDamageMultiplier: 1,
+    frostRadius: 154,
+    frostDamageMultiplier: 1,
     chainTargets: 6,
     frostDuration: 1.6,
     meleeManaMultiplier: 1,
@@ -138,17 +143,18 @@ export function castLightning(player, enemies, spells) {
   const start = { x: player.x + player.facing * 90, y: player.y };
   const hasBurningTarget = enemies.some((enemy) => enemy.hp > 0 && enemy.burn > 0 && distance(start, enemy) < 500);
   const bonusTargets = hasBurningTarget ? spells.traits.conductiveAshExtraTargets : 0;
+  const range = spells.lightningRange + (hasBurningTarget ? 80 : 0);
   const targets = enemies
-    .filter((enemy) => enemy.hp > 0 && distance(start, enemy) < (hasBurningTarget ? 560 : 480))
+    .filter((enemy) => enemy.hp > 0 && distance(start, enemy) < range)
     .sort((a, b) => lightningPriority(start, a) - lightningPriority(start, b))
     .slice(0, spells.chainTargets + bonusTargets);
   const killed = [];
   targets.forEach((enemy, index) => {
-    const damage = Math.max(28, 46 - index * 3) * (1 + rhythm);
+    const damage = Math.max(28, 46 - index * 3) * spells.lightningDamageMultiplier * (1 + rhythm);
     staggerEnemy(enemy, enemy.type === "ogre" ? 0.08 : 0.2);
     if (damageEnemy(enemy, damage, "lightning")) killed.push(enemy);
   });
-  const splashes = applyLightningSplash(enemies, targets, rhythm);
+  const splashes = applyLightningSplash(enemies, targets, rhythm, spells.lightningSplashDamageMultiplier);
   killed.push(...splashes);
   if (spells.traits.lightningRefundPerHit > 0 && targets.length > 0) {
     lightning.currentCooldown = Math.max(0, lightning.currentCooldown - targets.length * spells.traits.lightningRefundPerHit);
@@ -162,7 +168,7 @@ function lightningPriority(start, enemy) {
   return distance(start, enemy) + typeBias + woundedBias;
 }
 
-function applyLightningSplash(enemies, targets, rhythm) {
+function applyLightningSplash(enemies, targets, rhythm, splashMultiplier = 1) {
   const killed = [];
   const targetSet = new Set(targets);
   for (const target of targets) {
@@ -170,7 +176,7 @@ function applyLightningSplash(enemies, targets, rhythm) {
       if (targetSet.has(enemy) || enemy.hp <= 0 || enemy.type === "ogre") continue;
       if (distance(target, enemy) < 78 + enemy.radius) {
         staggerEnemy(enemy, 0.1);
-        if (damageEnemy(enemy, 12 * (1 + rhythm), "lightning")) killed.push(enemy);
+        if (damageEnemy(enemy, 12 * splashMultiplier * (1 + rhythm), "lightning")) killed.push(enemy);
       }
     }
   }
@@ -184,7 +190,7 @@ export function castFrost(player, enemies, spells) {
 
   const rhythm = consumeRhythmBonus(spells);
   recordCast(spells, "frost");
-  const cone = { x: player.x + player.facing * 120, y: player.y, radius: 154 };
+  const cone = { x: player.x + player.facing * 120, y: player.y, radius: spells.frostRadius };
   const killed = [];
   let hitCount = 0;
   for (const enemy of enemies) {
@@ -192,7 +198,7 @@ export function castFrost(player, enemies, spells) {
       hitCount += 1;
       enemy.slow = spells.frostDuration * (1 + rhythm * 0.45);
       enemy.freeze = Math.min(0.85, spells.frostDuration * 0.36 * (1 + rhythm * 0.35));
-      if (damageEnemy(enemy, 24 * (1 + rhythm), "frost")) killed.push(enemy);
+      if (damageEnemy(enemy, 24 * spells.frostDamageMultiplier * (1 + rhythm), "frost")) killed.push(enemy);
     }
   }
   if (hitCount >= 6 && spells.traits.frostRefundOnCrowd > 0) {
