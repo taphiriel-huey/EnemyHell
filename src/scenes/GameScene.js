@@ -35,7 +35,7 @@ const FIRE_PROJECTILE_ANIM = "fire-projectile-fx";
 const FIRE_PROJECTILE_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
 const FIRE_PROJECTILE_TRAVEL_TIME = 0.2;
 const LIGHTNING_IMPACT_ANIM = "lightning-impact-fx";
-const LIGHTNING_IMPACT_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
+const LIGHTNING_IMPACT_FRAMES = [0, 1, 2, 3, 4];
 const USE_CONCEPT_ENEMY_SPRITES = true;
 const CONCEPT_ENEMY_TEXTURES = {
   skeleton: "enemySkeletonConcept",
@@ -566,7 +566,8 @@ export class GameScene extends Phaser.Scene {
       sprite.setBlendMode(Phaser.BlendModes.ADD);
       sprite.setAlpha(0.94);
       const scale = Phaser.Math.Clamp(target.r / 22, 0.72, 1.25);
-      sprite.setDisplaySize(190 * scale, 124 * scale);
+      sprite.setDisplaySize(150 * scale, 98 * scale);
+      sprite.setAngle(Phaser.Math.Between(-8, 8));
       sprite.anims.play(LIGHTNING_IMPACT_ANIM, true);
       this.tweens.add({
         targets: sprite,
