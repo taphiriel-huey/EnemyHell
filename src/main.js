@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=lightning-impact-soft-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=lightning-impact-soft-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=lightning-impact-soft-1";
-import { GameScene } from "./scenes/GameScene.js?v=lightning-impact-soft-1";
+import { BootScene } from "./scenes/BootScene.js?v=frost-area-fx-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=frost-area-fx-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=frost-area-fx-1";
+import { GameScene } from "./scenes/GameScene.js?v=frost-area-fx-1";
 
 const config = {
   type: Phaser.AUTO,

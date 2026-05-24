@@ -83,5 +83,7 @@ Die ersten statischen Gegner-Sprite-Tests liegen unter `assets/sprites/enemies/`
 - `../fx/fire-projectile.png`: normalisiertes 6-Frame-Feuerprojektil-Sheet mit transparenter Flaeche.
 - `../fx/lightning-impact-raw.png`: extern erzeugtes Blitz-/Schock-Rohsheet mit gruenem Hintergrund.
 - `../fx/lightning-impact.png`: normalisiertes 6-Frame-Blitz-Impact-Sheet fuer getroffene Ziele.
+- `../fx/frost-area-raw.png`: extern erzeugtes Frost-Flachen-Rohsheet mit dunklem Hintergrund.
+- `../fx/frost-area.png`: normalisiertes 6-Frame-Frostflachen-Sheet fuer Frostnova/Froststoss.
 
 Die Gegnerdateien sind bewusst noch keine Animations-Sheets. `mage-walk.png` ist der erste technische Walk-Cycle-Test und dient vor allem dazu, Skalierung, Fusslinie und Bewegungslesbarkeit im laufenden Spiel zu pruefen.

@@ -36,6 +36,8 @@ const FIRE_PROJECTILE_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
 const FIRE_PROJECTILE_TRAVEL_TIME = 0.2;
 const LIGHTNING_IMPACT_ANIM = "lightning-impact-fx";
 const LIGHTNING_IMPACT_FRAMES = [0, 1, 2, 3, 4];
+const FROST_AREA_ANIM = "frost-area-fx";
+const FROST_AREA_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
 const USE_CONCEPT_ENEMY_SPRITES = true;
 const CONCEPT_ENEMY_TEXTURES = {
   skeleton: "enemySkeletonConcept",
@@ -285,6 +287,7 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.shake(95, 0.004);
     }
     if (result.kind === "frost") {
+      this.launchFrostArea(result.cone);
       this.effects.push({ kind: "frost", ...result.cone, t: 0.42, max: 0.42 });
     }
   }
@@ -579,6 +582,23 @@ export class GameScene extends Phaser.Scene {
       });
       previous = target;
     }
+  }
+
+  launchFrostArea(cone) {
+    if (!this.textures.exists("frostAreaFx")) return;
+    const sprite = this.add.sprite(cone.x, cone.y - 20, "frostAreaFx").setDepth(61);
+    sprite.setBlendMode(Phaser.BlendModes.ADD);
+    sprite.setAlpha(0.88);
+    sprite.setDisplaySize(cone.radius * 2.05, cone.radius * 1.18);
+    sprite.anims.play(FROST_AREA_ANIM, true);
+    this.tweens.add({
+      targets: sprite,
+      alpha: 0,
+      duration: 460,
+      delay: 210,
+      ease: "Quad.easeIn",
+      onComplete: () => sprite.destroy(),
+    });
   }
 
   checkCards() {
@@ -1340,6 +1360,14 @@ function createFxAnimations(scene) {
       key: LIGHTNING_IMPACT_ANIM,
       frames: LIGHTNING_IMPACT_FRAMES.map((frame) => ({ key: "lightningImpactFx", frame })),
       frameRate: 30,
+      repeat: 0,
+    });
+  }
+  if (scene.textures.exists("frostAreaFx") && !scene.anims.exists(FROST_AREA_ANIM)) {
+    scene.anims.create({
+      key: FROST_AREA_ANIM,
+      frames: FROST_AREA_FRAMES.map((frame) => ({ key: "frostAreaFx", frame })),
+      frameRate: 18,
       repeat: 0,
     });
   }
