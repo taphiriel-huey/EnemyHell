@@ -11,6 +11,7 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet("playerMageWalk", "assets/sprites/player/mage-walk.png", { frameWidth: 320, frameHeight: 254 });
     this.load.spritesheet("playerMageStaffAttack", "assets/sprites/player/mage-staff-attack-v2.png", { frameWidth: 360, frameHeight: 280 });
     this.load.spritesheet("playerMageCast", "assets/sprites/player/mage-cast.png", { frameWidth: 468, frameHeight: 280 });
+    this.load.spritesheet("fireProjectileFx", "assets/sprites/fx/fire-projectile.png", { frameWidth: 320, frameHeight: 180 });
     this.load.image("enemySkeletonConcept", "assets/sprites/enemies/skeleton-concept.png");
     this.load.image("enemyZombieConcept", "assets/sprites/enemies/zombie-concept.png");
     this.load.image("enemyGhoulConcept", "assets/sprites/enemies/ghoul-concept.png");

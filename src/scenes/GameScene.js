@@ -31,6 +31,9 @@ const CONCEPT_PLAYER_STAFF_FRAMES = Array.from({ length: 29 }, (_, frame) => fra
 const CONCEPT_PLAYER_CAST_FRAMES = Array.from({ length: 29 }, (_, frame) => frame);
 const CONCEPT_PLAYER_STAFF_VISUAL_DURATION = 0.72;
 const CONCEPT_PLAYER_CAST_DURATION = 0.9;
+const FIRE_PROJECTILE_ANIM = "fire-projectile-fx";
+const FIRE_PROJECTILE_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
+const FIRE_PROJECTILE_TRAVEL_TIME = 0.2;
 const USE_CONCEPT_ENEMY_SPRITES = true;
 const CONCEPT_ENEMY_TEXTURES = {
   skeleton: "enemySkeletonConcept",
@@ -101,6 +104,7 @@ export class GameScene extends Phaser.Scene {
     this.createInput();
     this.createWorld();
     createPlayerAnimations(this);
+    createFxAnimations(this);
     this.playerLayer = this.add.graphics().setDepth(29);
     this.mageTextureKey = USE_CONCEPT_PLAYER_SPRITE ? CONCEPT_PLAYER_IDLE_TEXTURE : "mage";
     this.mage = this.add.sprite(this.player.x, this.player.y - 42, this.mageTextureKey).setDepth(30);
@@ -268,7 +272,8 @@ export class GameScene extends Phaser.Scene {
     this.castAnimTimer = CONCEPT_PLAYER_CAST_DURATION;
     this.restartCastAnim = true;
     if (result.kind === "fire") {
-      this.effects.push({ kind: "fire", ...result.impact, t: 0.36, max: 0.36 });
+      this.launchFireProjectile(result.impact);
+      this.effects.push({ kind: "fire", ...result.impact, delay: FIRE_PROJECTILE_TRAVEL_TIME * 0.72, t: 0.42, max: 0.42 });
       this.cameras.main.shake(130, 0.006);
     }
     if (result.kind === "lightning") {
@@ -378,8 +383,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   updateEffects(dt) {
-    for (const effect of this.effects) effect.t -= dt;
-    this.effects = this.effects.filter((effect) => effect.t > 0);
+    for (const effect of this.effects) {
+      if (effect.delay > 0) {
+        effect.delay -= dt;
+        continue;
+      }
+      effect.t -= dt;
+    }
+    this.effects = this.effects.filter((effect) => effect.delay > 0 || effect.t > 0);
     for (const item of this.floatTexts) {
       item.t -= dt;
       item.text.setY(item.y - (1 - item.t / item.max) * 28);
@@ -457,6 +468,7 @@ export class GameScene extends Phaser.Scene {
   drawEffects() {
     this.fxLayer.clear();
     for (const effect of this.effects) {
+      if (effect.delay > 0) continue;
       const p = effect.t / effect.max;
       if (effect.kind === "fire") {
         const dir = Math.sign(effect.x - this.player.x) || this.player.facing || 1;
@@ -513,6 +525,30 @@ export class GameScene extends Phaser.Scene {
         drawLightningImpacts(this.fxLayer, effect.targets, p);
       }
     }
+  }
+
+  launchFireProjectile(impact) {
+    if (!this.textures.exists("fireProjectileFx")) return;
+    const dir = Math.sign(impact.x - this.player.x) || this.player.facing || 1;
+    const startX = this.player.x + dir * 44;
+    const startY = this.player.y - 34;
+    const endX = impact.x - dir * Math.min(72, impact.radius * 0.42);
+    const endY = impact.y - 22;
+    const sprite = this.add.sprite(startX, startY, "fireProjectileFx").setDepth(62);
+    sprite.setFlipX(dir < 0);
+    sprite.setBlendMode(Phaser.BlendModes.ADD);
+    sprite.setAlpha(0.95);
+    sprite.setDisplaySize(impact.radius * 1.8, impact.radius * 1.02);
+    sprite.anims.play(FIRE_PROJECTILE_ANIM, true);
+    this.tweens.add({
+      targets: sprite,
+      x: endX,
+      y: endY,
+      alpha: 0.25,
+      duration: FIRE_PROJECTILE_TRAVEL_TIME * 1000,
+      ease: "Cubic.easeOut",
+      onComplete: () => sprite.destroy(),
+    });
   }
 
   checkCards() {
@@ -1255,6 +1291,17 @@ function createPlayerAnimations(scene) {
       key: CONCEPT_PLAYER_CAST_ANIM,
       frames: CONCEPT_PLAYER_CAST_FRAMES.map((frame) => ({ key: CONCEPT_PLAYER_CAST_TEXTURE, frame })),
       frameRate: 32,
+      repeat: 0,
+    });
+  }
+}
+
+function createFxAnimations(scene) {
+  if (scene.textures.exists("fireProjectileFx") && !scene.anims.exists(FIRE_PROJECTILE_ANIM)) {
+    scene.anims.create({
+      key: FIRE_PROJECTILE_ANIM,
+      frames: FIRE_PROJECTILE_FRAMES.map((frame) => ({ key: "fireProjectileFx", frame })),
+      frameRate: 26,
       repeat: 0,
     });
   }
