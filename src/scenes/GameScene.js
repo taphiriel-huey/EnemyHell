@@ -34,6 +34,11 @@ const CONCEPT_PLAYER_CAST_DURATION = 0.9;
 const FIRE_PROJECTILE_ANIM = "fire-projectile-fx";
 const FIRE_PROJECTILE_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
 const FIRE_PROJECTILE_TRAVEL_TIME = 0.2;
+const SPELL_RELEASE_DELAYS = {
+  fire: 0.34,
+  lightning: 0.26,
+  frost: 0.28,
+};
 const LIGHTNING_IMPACT_ANIM = "lightning-impact-fx";
 const LIGHTNING_IMPACT_FRAMES = [0, 1, 2, 3, 4];
 const FROST_AREA_ANIM = "frost-area-fx";
@@ -102,6 +107,7 @@ export class GameScene extends Phaser.Scene {
     this.debugView = false;
     this.staffAttackAnimTimer = 0;
     this.castAnimTimer = 0;
+    this.pendingSpellReleases = [];
     this.restartCastAnim = false;
     this.runFocusLabel = applyStartFocus(this.startFocus, this.player, this.spells);
 
@@ -192,6 +198,7 @@ export class GameScene extends Phaser.Scene {
     updateSpellCooldowns(this.spells, dt);
     this.staffAttackAnimTimer = Math.max(0, this.staffAttackAnimTimer - dt);
     this.castAnimTimer = Math.max(0, this.castAnimTimer - dt);
+    this.updatePendingSpellReleases(dt);
     updateWaves(this.waves, dt, (type, x, y, options) => {
       const enemy = createEnemy(type, x, y, options);
       this.enemies.push(enemy);
@@ -275,6 +282,27 @@ export class GameScene extends Phaser.Scene {
     }
     this.castAnimTimer = CONCEPT_PLAYER_CAST_DURATION;
     this.restartCastAnim = true;
+    this.pendingSpellReleases.push({
+      result,
+      delay: SPELL_RELEASE_DELAYS[result.kind] ?? 0.25,
+    });
+  }
+
+  updatePendingSpellReleases(dt) {
+    if (this.pendingSpellReleases.length === 0) return;
+    const remaining = [];
+    for (const pending of this.pendingSpellReleases) {
+      pending.delay -= dt;
+      if (pending.delay <= 0) {
+        this.releaseSpellEffect(pending.result);
+      } else {
+        remaining.push(pending);
+      }
+    }
+    this.pendingSpellReleases = remaining;
+  }
+
+  releaseSpellEffect(result) {
     if (result.kind === "fire") {
       this.launchFireProjectile(result.impact);
       this.effects.push({ kind: "fire", ...result.impact, delay: FIRE_PROJECTILE_TRAVEL_TIME * 0.72, t: 0.42, max: 0.42 });
@@ -604,6 +632,7 @@ export class GameScene extends Phaser.Scene {
   checkCards() {
     if (this.waves.time >= this.nextCardAt) {
       this.pausedForCard = true;
+      this.pendingSpellReleases = [];
       this.pressedKeys.clear();
       const cards = getCardChoices();
       createCardOverlay(this, cards, (card) => {
@@ -654,6 +683,7 @@ export class GameScene extends Phaser.Scene {
   showSectionClear() {
     if (this.pausedForSection) return;
     this.pausedForSection = true;
+    this.pendingSpellReleases = [];
     this.pressedKeys.clear();
     this.heldKeys.clear();
     const depth = 2500;
@@ -746,6 +776,7 @@ export class GameScene extends Phaser.Scene {
 
   openIntermissionCards() {
     this.pausedForCard = true;
+    this.pendingSpellReleases = [];
     const cards = getCardChoices();
     createCardOverlay(this, cards, (card) => {
       card.apply(this.spells);
@@ -756,6 +787,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   startSection(sectionId) {
+    this.pendingSpellReleases = [];
     this.pressedKeys.clear();
     this.heldKeys.clear();
     this.section = sectionId;
@@ -794,6 +826,7 @@ export class GameScene extends Phaser.Scene {
 
   showRunSummary(result) {
     this.gameOver = true;
+    this.pendingSpellReleases = [];
     this.pausedForCard = false;
     this.pausedForSection = false;
     if (this.pauseOverlay) {

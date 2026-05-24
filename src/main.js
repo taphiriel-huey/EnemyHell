@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=intermission-choice-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=intermission-choice-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=intermission-choice-1";
-import { GameScene } from "./scenes/GameScene.js?v=intermission-choice-1";
+import { BootScene } from "./scenes/BootScene.js?v=spell-release-sync-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=spell-release-sync-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=spell-release-sync-1";
+import { GameScene } from "./scenes/GameScene.js?v=spell-release-sync-1";
 
 const config = {
   type: Phaser.AUTO,
