@@ -61,8 +61,8 @@ export function drawHud(ui, state) {
   panel(g, 350, 618, 580, 82);
   const slots = state.skills ?? [];
   const utility = [
-    state.staff ?? { hotkey: "J", label: "Stab", canCast: true, currentCooldown: 0, cooldown: 1, readyPulse: 0 },
-    { hotkey: "Space", label: "Dash", canCast: true, currentCooldown: 0, cooldown: 1, readyPulse: 0 },
+    state.staff ?? { hotkey: "LMB/J", label: "Stab", canCast: true, currentCooldown: 0, cooldown: 1, readyPulse: 0 },
+    { hotkey: "Space/Shift", label: "Dash", canCast: true, currentCooldown: 0, cooldown: 1, readyPulse: 0 },
   ];
   const allSlots = [...slots, ...utility];
   for (let i = 0; i < 5; i += 1) {

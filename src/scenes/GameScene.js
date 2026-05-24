@@ -113,6 +113,7 @@ export class GameScene extends Phaser.Scene {
   createInput() {
     this.heldKeys = new Set();
     this.pressedKeys = new Set();
+    this.input.mouse?.disableContextMenu();
     this.onKeyDown = (event) => {
       const key = normalizeKey(event.key);
       if (isGameKey(key)) event.preventDefault();
@@ -130,11 +131,19 @@ export class GameScene extends Phaser.Scene {
     };
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
+    this.input.on("pointerdown", this.onPointerDown, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener("keydown", this.onKeyDown);
       window.removeEventListener("keyup", this.onKeyUp);
+      this.input.off("pointerdown", this.onPointerDown, this);
     });
     this.inputState = { up: false, left: false, down: false, right: false, dash: false };
+  }
+
+  onPointerDown(pointer) {
+    if (this.pausedForCard || this.pausedForMenu || this.pausedForSection || this.gameOver) return;
+    if (pointer.leftButtonDown()) this.pressedKeys.add("mouseleft");
+    if (pointer.rightButtonDown()) this.pressedKeys.add("mouseright");
   }
 
   createWorld() {
@@ -198,12 +207,12 @@ export class GameScene extends Phaser.Scene {
     this.inputState.left = this.heldKeys.has("a") || this.heldKeys.has("arrowleft");
     this.inputState.down = this.heldKeys.has("s") || this.heldKeys.has("arrowdown");
     this.inputState.right = this.heldKeys.has("d") || this.heldKeys.has("arrowright");
-    this.inputState.dash = this.consumePressed(" ");
+    this.inputState.dash = this.consumePressed(" ") || this.consumePressed("shift");
     if (this.consumePressed("f1")) this.debugView = !this.debugView;
   }
 
   handleActions() {
-    if (this.consumePressed("j") && canMelee(this.player)) {
+    if ((this.consumePressed("j") || this.consumePressed("mouseleft")) && canMelee(this.player)) {
       const attack = performMelee(this.player);
       this.staffAttackAnimTimer = CONCEPT_PLAYER_STAFF_VISUAL_DURATION;
       this.restartStaffAttackAnim = true;
@@ -240,9 +249,9 @@ export class GameScene extends Phaser.Scene {
       this.effects.push({ kind: "staff", ...attack, hit: hits > 0, t: attack.attackDuration, max: attack.attackDuration });
     }
 
-    if (this.consumePressed("1")) this.consumeSpell(castFireball(this.player, this.enemies, this.spells));
-    if (this.consumePressed("2")) this.consumeSpell(castLightning(this.player, this.enemies, this.spells));
-    if (this.consumePressed("3")) this.consumeSpell(castFrost(this.player, this.enemies, this.spells));
+    if (this.consumePressed("1") || this.consumePressed("mouseright")) this.consumeSpell(castFireball(this.player, this.enemies, this.spells));
+    if (this.consumePressed("2") || this.consumePressed("q")) this.consumeSpell(castLightning(this.player, this.enemies, this.spells));
+    if (this.consumePressed("3") || this.consumePressed("e")) this.consumeSpell(castFrost(this.player, this.enemies, this.spells));
   }
 
   consumePressed(key) {
@@ -540,7 +549,7 @@ export class GameScene extends Phaser.Scene {
       flankIncoming: this.waves.flankWarnings.length > 0,
       skills: getSkillbarState(this.spells, this.player),
       staff: {
-        hotkey: "J",
+        hotkey: "LMB/J",
         label: `Stab ${this.player.comboIndex + 1}`,
         canCast: this.player.staffCooldown <= 0,
         currentCooldown: this.player.staffCooldown,
@@ -758,7 +767,7 @@ function normalizeKey(key) {
 }
 
 function isGameKey(key) {
-  return ["w", "a", "s", "d", "arrowup", "arrowleft", "arrowdown", "arrowright", " ", "j", "1", "2", "3", "f1", "escape"].includes(key);
+  return ["w", "a", "s", "d", "arrowup", "arrowleft", "arrowdown", "arrowright", " ", "shift", "j", "q", "e", "1", "2", "3", "f1", "escape"].includes(key);
 }
 
 function createPauseOverlay(scene, onResume, onPrep) {
@@ -772,9 +781,10 @@ function createPauseOverlay(scene, onResume, onPrep) {
 
   const controls = [
     ["Bewegung", "WASD / Pfeile"],
-    ["Dash", "Space"],
-    ["Stabcombo", "J"],
-    ["Zauber", "1 Feuer   2 Blitz   3 Frost"],
+    ["Dash", "Space / Shift"],
+    ["Stabcombo", "Linksklick / J"],
+    ["Zauber", "Rechtsklick Feuer   Q Blitz   E Frost"],
+    ["Alternativ", "1 Feuer   2 Blitz   3 Frost"],
     ["Debug", "F1"],
   ];
   const roles = [

@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=player-staff-smooth-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=player-staff-smooth-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=player-staff-smooth-1";
-import { GameScene } from "./scenes/GameScene.js?v=player-staff-smooth-1";
+import { BootScene } from "./scenes/BootScene.js?v=comfort-controls-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=comfort-controls-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=comfort-controls-1";
+import { GameScene } from "./scenes/GameScene.js?v=comfort-controls-1";
 
 const config = {
   type: Phaser.AUTO,

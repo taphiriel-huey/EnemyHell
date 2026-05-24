@@ -78,9 +78,9 @@ export function updateSpellCooldowns(spells, dt) {
 
 export function getSkillbarState(spells, player) {
   return [
-    skillState("fire", "1", "Feuer", spells.spells.fire, player, spells.nextSpellCostMultiplier),
-    skillState("lightning", "2", "Blitz", spells.spells.lightning, player, spells.nextSpellCostMultiplier),
-    skillState("frost", "3", "Frost", spells.spells.frost, player, spells.nextSpellCostMultiplier),
+    skillState("fire", "RMB/1", "Feuer", spells.spells.fire, player, spells.nextSpellCostMultiplier),
+    skillState("lightning", "Q/2", "Blitz", spells.spells.lightning, player, spells.nextSpellCostMultiplier),
+    skillState("frost", "E/3", "Frost", spells.spells.frost, player, spells.nextSpellCostMultiplier),
   ];
 }
 
