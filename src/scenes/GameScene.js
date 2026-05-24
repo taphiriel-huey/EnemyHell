@@ -589,7 +589,7 @@ export class GameScene extends Phaser.Scene {
     const sprite = this.add.sprite(cone.x, cone.y - 20, "frostAreaFx").setDepth(61);
     sprite.setBlendMode(Phaser.BlendModes.ADD);
     sprite.setAlpha(0.88);
-    sprite.setDisplaySize(cone.radius * 2.05, cone.radius * 1.18);
+    sprite.setDisplaySize(cone.radius * 2.18, cone.radius * 1.22);
     sprite.anims.play(FROST_AREA_ANIM, true);
     this.tweens.add({
       targets: sprite,
