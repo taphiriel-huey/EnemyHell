@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blackhaven Enemyhell</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Cinzel", "Trajan Pro", Georgia, serif;
+        background: #070607;
+        color: #f3ead6;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 40% 20%, rgba(122, 24, 21, 0.28), transparent 35%),
+          linear-gradient(180deg, #0b0a0d 0%, #151014 62%, #070607 100%);
+      }
+
+      #game {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <script type="module" src="./src/main.js?v=player-staff-smooth-1"></script>
+  </body>
+</html>
