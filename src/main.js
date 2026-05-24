@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=fire-projectile-fx-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=fire-projectile-fx-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=fire-projectile-fx-1";
-import { GameScene } from "./scenes/GameScene.js?v=fire-projectile-fx-1";
+import { BootScene } from "./scenes/BootScene.js?v=lightning-impact-fx-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=lightning-impact-fx-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=lightning-impact-fx-1";
+import { GameScene } from "./scenes/GameScene.js?v=lightning-impact-fx-1";
 
 const config = {
   type: Phaser.AUTO,

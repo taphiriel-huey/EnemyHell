@@ -34,6 +34,8 @@ const CONCEPT_PLAYER_CAST_DURATION = 0.9;
 const FIRE_PROJECTILE_ANIM = "fire-projectile-fx";
 const FIRE_PROJECTILE_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
 const FIRE_PROJECTILE_TRAVEL_TIME = 0.2;
+const LIGHTNING_IMPACT_ANIM = "lightning-impact-fx";
+const LIGHTNING_IMPACT_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
 const USE_CONCEPT_ENEMY_SPRITES = true;
 const CONCEPT_ENEMY_TEXTURES = {
   skeleton: "enemySkeletonConcept",
@@ -277,7 +279,9 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.shake(130, 0.006);
     }
     if (result.kind === "lightning") {
-      this.effects.push({ kind: "lightning", start: result.start, targets: result.targets.map((e) => ({ x: e.x, y: e.y, r: e.radius })), t: 0.32, max: 0.32 });
+      const targets = result.targets.map((e) => ({ x: e.x, y: e.y, r: e.radius }));
+      this.launchLightningImpacts(result.start, targets);
+      this.effects.push({ kind: "lightning", start: result.start, targets, t: 0.32, max: 0.32 });
       this.cameras.main.shake(95, 0.004);
     }
     if (result.kind === "frost") {
@@ -549,6 +553,31 @@ export class GameScene extends Phaser.Scene {
       ease: "Cubic.easeOut",
       onComplete: () => sprite.destroy(),
     });
+  }
+
+  launchLightningImpacts(start, targets) {
+    if (!this.textures.exists("lightningImpactFx")) return;
+    let previous = start;
+    for (const target of targets) {
+      const dir = Math.sign(target.x - previous.x) || 1;
+      const sprite = this.add.sprite(target.x, target.y - target.r * 0.35, "lightningImpactFx").setDepth(63);
+      sprite.setOrigin(0.2, 0.5);
+      sprite.setFlipX(dir < 0);
+      sprite.setBlendMode(Phaser.BlendModes.ADD);
+      sprite.setAlpha(0.94);
+      const scale = Phaser.Math.Clamp(target.r / 22, 0.72, 1.25);
+      sprite.setDisplaySize(190 * scale, 124 * scale);
+      sprite.anims.play(LIGHTNING_IMPACT_ANIM, true);
+      this.tweens.add({
+        targets: sprite,
+        alpha: 0,
+        duration: 240,
+        delay: 95,
+        ease: "Quad.easeIn",
+        onComplete: () => sprite.destroy(),
+      });
+      previous = target;
+    }
   }
 
   checkCards() {
@@ -1302,6 +1331,14 @@ function createFxAnimations(scene) {
       key: FIRE_PROJECTILE_ANIM,
       frames: FIRE_PROJECTILE_FRAMES.map((frame) => ({ key: "fireProjectileFx", frame })),
       frameRate: 26,
+      repeat: 0,
+    });
+  }
+  if (scene.textures.exists("lightningImpactFx") && !scene.anims.exists(LIGHTNING_IMPACT_ANIM)) {
+    scene.anims.create({
+      key: LIGHTNING_IMPACT_ANIM,
+      frames: LIGHTNING_IMPACT_FRAMES.map((frame) => ({ key: "lightningImpactFx", frame })),
+      frameRate: 30,
       repeat: 0,
     });
   }
