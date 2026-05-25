@@ -182,6 +182,12 @@ export class GameScene extends Phaser.Scene {
     this.groundImage = this.add.image(640, 628, "blackhavenGroundConcept").setDepth(17);
     this.groundImage.setDisplaySize(this.scale.width, 228);
     this.groundImage.setAlpha(this.section === 1 ? 0.72 : 0);
+    this.churchyardGroundImage = this.add.image(640, 628, "blackhavenChurchyardGroundConcept").setDepth(17);
+    this.churchyardGroundImage.setDisplaySize(this.scale.width, 228);
+    this.churchyardGroundImage.setAlpha(0);
+    this.forestGroundImage = this.add.image(640, 628, "blackhavenForestGroundConcept").setDepth(17);
+    this.forestGroundImage.setDisplaySize(this.scale.width, 228);
+    this.forestGroundImage.setAlpha(0);
     this.previewLayer = this.add.graphics().setDepth(6);
     this.warningLayer = this.add.graphics().setDepth(12);
     this.ground = this.add.graphics().setDepth(18);
@@ -198,6 +204,8 @@ export class GameScene extends Phaser.Scene {
     this.churchyardImage.setAlpha(this.section === 2 ? 0.72 : 0);
     this.forestImage.setAlpha(this.section === 3 ? 0.74 : 0);
     this.groundImage.setAlpha(this.section === 1 ? 0.72 : 0);
+    this.churchyardGroundImage.setAlpha(this.section === 2 ? 0.86 : 0);
+    this.forestGroundImage.setAlpha(this.section === 3 ? 0.86 : 0);
     drawWorld(this.bg, this.scale.width, this.scale.height, this.section, this.section === 1);
     if (this.section === 1) {
       drawBackgroundConceptVeil(this.bgVeil, this.scale.width, this.scale.height);
@@ -1438,14 +1446,14 @@ function drawGround(g, section = 1) {
     return;
   }
   const isForest = section === 3;
-  g.fillStyle(isForest ? 0x07090a : 0x090b10, 0.92);
+  g.fillStyle(isForest ? 0x07090a : 0x090b10, 0.24);
   g.fillRect(0, 565, 1280, 155);
-  g.fillStyle(isForest ? 0x10120f : 0x11141b, 0.96);
+  g.fillStyle(isForest ? 0x10120f : 0x11141b, 0.26);
   g.fillEllipse(625, 620, 1120, 138);
-  g.fillStyle(isForest ? 0x171813 : 0x1a1a23, 0.42);
+  g.fillStyle(isForest ? 0x171813 : 0x1a1a23, 0.18);
   g.fillEllipse(360, 650, 520, 74);
   g.fillEllipse(890, 636, 520, 62);
-  g.lineStyle(1, isForest ? 0x80704d : 0x6f6c82, 0.42);
+  g.lineStyle(1, isForest ? 0x80704d : 0x6f6c82, 0.32);
   g.lineBetween(70, 590, 1230, 548);
   g.lineBetween(120, 650, 1180, 606);
   drawGroundStones(g, true);
