@@ -20,6 +20,7 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet("lightningImpactFx", "assets/sprites/fx/lightning-impact.png", { frameWidth: 340, frameHeight: 220 });
     this.load.spritesheet("frostAreaFx", "assets/sprites/fx/frost-area.png", { frameWidth: 340, frameHeight: 220 });
     this.load.spritesheet("enemySkeletonWalk", "assets/sprites/enemies/skeleton-walk.png", { frameWidth: 220, frameHeight: 180 });
+    this.load.spritesheet("enemyZombieWalk", "assets/sprites/enemies/zombie-walk.png", { frameWidth: 314, frameHeight: 209, spacing: 4 });
     this.load.spritesheet("enemyGhoulWalk", "assets/sprites/enemies/ghoul-walk.png", { frameWidth: 314, frameHeight: 180, spacing: 4 });
     this.load.image("enemySkeletonConcept", "assets/sprites/enemies/skeleton-concept.png");
     this.load.image("enemyZombieConcept", "assets/sprites/enemies/zombie-concept.png");

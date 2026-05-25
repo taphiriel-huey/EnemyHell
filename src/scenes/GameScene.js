@@ -65,12 +65,14 @@ const FROST_AREA_ANIM = "frost-area-fx";
 const FROST_AREA_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
 const SKELETON_WALK_ANIM = "skeleton-walk";
 const SKELETON_WALK_FRAMES = Array.from({ length: 8 }, (_, frame) => frame);
+const ZOMBIE_WALK_ANIM = "zombie-walk";
+const ZOMBIE_WALK_FRAMES = Array.from({ length: 24 }, (_, frame) => frame);
 const GHOUL_WALK_ANIM = "ghoul-walk";
 const GHOUL_WALK_FRAMES = Array.from({ length: 28 }, (_, frame) => frame);
 const USE_CONCEPT_ENEMY_SPRITES = true;
 const CONCEPT_ENEMY_TEXTURES = {
   skeleton: "enemySkeletonWalk",
-  zombie: "enemyZombieConcept",
+  zombie: "enemyZombieWalk",
   ghoul: "enemyGhoulWalk",
   ogre: "enemyOgreConcept",
 };
@@ -584,6 +586,9 @@ export class GameScene extends Phaser.Scene {
       if (sprite.texture.key !== textureKey) sprite.setTexture(textureKey);
       if (enemy.type === "skeleton" && sprite.anims.currentAnim?.key !== SKELETON_WALK_ANIM) {
         sprite.anims.play(SKELETON_WALK_ANIM, true);
+      }
+      if (enemy.type === "zombie" && sprite.anims.currentAnim?.key !== ZOMBIE_WALK_ANIM) {
+        sprite.anims.play(ZOMBIE_WALK_ANIM, true);
       }
       if (enemy.type === "ghoul" && sprite.anims.currentAnim?.key !== GHOUL_WALK_ANIM) {
         sprite.anims.play(GHOUL_WALK_ANIM, true);
@@ -1752,6 +1757,14 @@ function createEnemyAnimations(scene) {
       key: SKELETON_WALK_ANIM,
       frames: SKELETON_WALK_FRAMES.map((frame) => ({ key: "enemySkeletonWalk", frame })),
       frameRate: 10,
+      repeat: -1,
+    });
+  }
+  if (scene.textures.exists("enemyZombieWalk") && !scene.anims.exists(ZOMBIE_WALK_ANIM)) {
+    scene.anims.create({
+      key: ZOMBIE_WALK_ANIM,
+      frames: ZOMBIE_WALK_FRAMES.map((frame) => ({ key: "enemyZombieWalk", frame })),
+      frameRate: 8,
       repeat: -1,
     });
   }
