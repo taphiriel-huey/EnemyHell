@@ -77,7 +77,7 @@ const CONCEPT_ENEMY_TEXTURES = {
 const CONCEPT_ENEMY_HEIGHTS = {
   skeleton: 72,
   zombie: 94,
-  ghoul: 260,
+  ghoul: 120,
   ogre: 162,
 };
 
@@ -1868,10 +1868,10 @@ function applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, reco
     return;
   }
 
-  const source = sprite.texture.getSourceImage();
   const baseHeight = CONCEPT_ENEMY_HEIGHTS[enemy.type] ?? enemy.radius * 2.4;
   const targetHeight = baseHeight * (enemy.isBoss ? 1.22 : 1);
-  const scale = source?.height ? targetHeight / source.height : 1;
+  const frameHeight = sprite.frame?.cutHeight || sprite.texture.getSourceImage()?.height || targetHeight;
+  const scale = frameHeight ? targetHeight / frameHeight : 1;
   sprite.setOrigin(0.5, 1);
   sprite.setScale(scale * depthScale);
   sprite.setPosition(enemy.x, enemy.y + enemy.radius * 0.35 - recoilLift);
