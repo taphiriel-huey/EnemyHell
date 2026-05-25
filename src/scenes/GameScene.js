@@ -11,16 +11,16 @@ const PICKUP_BOUNDS = { left: 90, right: 660, top: 395, bottom: 635 };
 const PICKUP_MIN_PLAYER_DISTANCE = 150;
 const SECTION_LAYOUTS = {
   1: {
-    bounds: BOUNDS,
-    pickupBounds: PICKUP_BOUNDS,
-    playerStart: { x: 270, y: 520 },
-    depth: { nearY: 650, farY: 390, min: 0.9, max: 1.08 },
+    bounds: { left: 90, right: 690, top: 500, bottom: 650 },
+    pickupBounds: { left: 95, right: 660, top: 512, bottom: 635 },
+    playerStart: { x: 270, y: 575 },
+    depth: { nearY: 650, farY: 500, min: 0.84, max: 1.08 },
   },
   2: {
-    bounds: { left: 110, right: 690, top: 492, bottom: 650 },
-    pickupBounds: { left: 115, right: 655, top: 508, bottom: 635 },
-    playerStart: { x: 260, y: 572 },
-    depth: { nearY: 650, farY: 492, min: 0.82, max: 1.08 },
+    bounds: { left: 112, right: 690, top: 535, bottom: 650 },
+    pickupBounds: { left: 118, right: 655, top: 545, bottom: 635 },
+    playerStart: { x: 260, y: 592 },
+    depth: { nearY: 650, farY: 535, min: 0.8, max: 1.08 },
   },
   3: {
     bounds: { left: 118, right: 710, top: 540, bottom: 650 },
