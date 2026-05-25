@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=skeleton-walk-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=skeleton-walk-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=skeleton-walk-1";
-import { GameScene } from "./scenes/GameScene.js?v=skeleton-walk-1";
+import { BootScene } from "./scenes/BootScene.js?v=start-screen-art-3";
+import { MenuScene } from "./scenes/MenuScene.js?v=start-screen-art-3";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=start-screen-art-3";
+import { GameScene } from "./scenes/GameScene.js?v=start-screen-art-3";
 
 const config = {
   type: Phaser.AUTO,
