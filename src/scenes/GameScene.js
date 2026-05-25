@@ -306,17 +306,20 @@ export class GameScene extends Phaser.Scene {
     if (result.kind === "fire") {
       this.launchFireProjectile(result.impact);
       this.effects.push({ kind: "fire", ...result.impact, delay: FIRE_PROJECTILE_TRAVEL_TIME * 0.72, t: 0.42, max: 0.42 });
+      this.effects.push({ kind: "fireBurst", ...result.impact, delay: FIRE_PROJECTILE_TRAVEL_TIME * 0.86, t: 0.55, max: 0.55 });
       this.cameras.main.shake(130, 0.006);
     }
     if (result.kind === "lightning") {
       const targets = result.targets.map((e) => ({ x: e.x, y: e.y, r: e.radius }));
       this.launchLightningImpacts(result.start, targets);
       this.effects.push({ kind: "lightning", start: result.start, targets, t: 0.32, max: 0.32 });
+      this.effects.push({ kind: "lightningBurst", start: result.start, targets, t: 0.34, max: 0.34 });
       this.cameras.main.shake(95, 0.004);
     }
     if (result.kind === "frost") {
       this.launchFrostArea(result.cone);
       this.effects.push({ kind: "frost", ...result.cone, t: 0.42, max: 0.42 });
+      this.effects.push({ kind: "frostBloom", ...result.cone, t: 0.72, max: 0.72 });
     }
   }
 
@@ -526,6 +529,28 @@ export class GameScene extends Phaser.Scene {
           );
         }
       }
+      if (effect.kind === "fireBurst") {
+        const q = 1 - p;
+        const dir = Math.sign(effect.x - this.player.x) || this.player.facing || 1;
+        this.fxLayer.fillStyle(0xff5b19, 0.22 * p);
+        drawWideSpellCone(this.fxLayer, effect.x - dir * 160, effect.y, dir, effect.radius * (1.35 + q * 0.25), 0xff6d1f, 0.26 * p);
+        this.fxLayer.lineStyle(14, 0xffb23f, 0.52 * p);
+        this.fxLayer.strokeCircle(effect.x, effect.y, effect.radius * (0.58 + q * 0.82));
+        this.fxLayer.lineStyle(4, 0xfff0a6, 0.92 * p);
+        this.fxLayer.strokeCircle(effect.x, effect.y, effect.radius * (0.36 + q * 1.05));
+        for (let i = 0; i < 18; i += 1) {
+          const a = (i / 18) * Math.PI * 2 + q * 0.45;
+          const inner = effect.radius * (0.14 + q * 0.3);
+          const outer = effect.radius * (0.74 + q * 0.98);
+          this.fxLayer.lineStyle(i % 3 === 0 ? 5 : 2, i % 3 === 0 ? 0xfff0a6 : 0xff7a24, (0.86 - i * 0.018) * p);
+          this.fxLayer.lineBetween(
+            effect.x + Math.cos(a) * inner,
+            effect.y + Math.sin(a) * inner * 0.72,
+            effect.x + Math.cos(a) * outer,
+            effect.y + Math.sin(a) * outer * 0.72,
+          );
+        }
+      }
       if (effect.kind === "staff") {
         drawStaffEffect(this.fxLayer, effect, p, this.debugView);
       }
@@ -536,6 +561,21 @@ export class GameScene extends Phaser.Scene {
         this.fxLayer.fillCircle(effect.x, effect.y, effect.radius);
         this.fxLayer.lineStyle(3, 0xcaf7ff, 0.8 * p);
         this.fxLayer.strokeCircle(effect.x, effect.y, effect.radius * (1.1 - p * 0.2));
+      }
+      if (effect.kind === "frostBloom") {
+        const q = 1 - p;
+        this.fxLayer.fillStyle(0x80dfff, 0.11 * p);
+        this.fxLayer.fillEllipse(effect.x, effect.y - 10, effect.radius * (1.35 + q * 0.9), effect.radius * (0.44 + q * 0.34));
+        this.fxLayer.lineStyle(9, 0xaeefff, 0.36 * p);
+        this.fxLayer.strokeEllipse(effect.x, effect.y - 8, effect.radius * (1.12 + q * 1.1), effect.radius * (0.38 + q * 0.46));
+        this.fxLayer.lineStyle(3, 0xf1fdff, 0.86 * p);
+        this.fxLayer.strokeEllipse(effect.x, effect.y - 8, effect.radius * (0.62 + q * 1.32), effect.radius * (0.2 + q * 0.58));
+        for (let i = 0; i < 14; i += 1) {
+          const a = (i / 14) * Math.PI * 2;
+          const cx = effect.x + Math.cos(a) * effect.radius * (0.42 + q * 0.72);
+          const cy = effect.y - 12 + Math.sin(a) * effect.radius * (0.14 + q * 0.28);
+          drawSnowStar(this.fxLayer, cx, cy, 5 + (i % 3) * 2 + q * 3, 0xdffaff, 0.72 * p);
+        }
       }
       if (effect.kind === "shatter") {
         this.fxLayer.fillStyle(0xa9edff, 0.12 * p);
@@ -559,6 +599,20 @@ export class GameScene extends Phaser.Scene {
         this.fxLayer.lineStyle(1, 0xffffff, 0.95 * p);
         drawLightningChain(this.fxLayer, effect.start, effect.targets, -12);
         drawLightningImpacts(this.fxLayer, effect.targets, p);
+      }
+      if (effect.kind === "lightningBurst") {
+        const q = 1 - p;
+        this.fxLayer.lineStyle(18, 0x356dff, 0.22 * p);
+        drawLightningChain(this.fxLayer, effect.start, effect.targets, 42);
+        this.fxLayer.lineStyle(9, 0x9be7ff, 0.72 * p);
+        drawLightningChain(this.fxLayer, effect.start, effect.targets, -28);
+        this.fxLayer.lineStyle(3, 0xffffff, 0.95 * p);
+        drawLightningChain(this.fxLayer, effect.start, effect.targets, 14);
+        for (const target of effect.targets) {
+          this.fxLayer.fillStyle(0x8deaff, 0.18 * p);
+          this.fxLayer.fillCircle(target.x, target.y - target.r * 0.35, target.r * (1.1 + q * 1.2));
+          drawElectricStar(this.fxLayer, target.x, target.y - target.r * 0.35, target.r * (1.1 + q * 1.7), p);
+        }
       }
     }
   }
@@ -1681,6 +1735,21 @@ function drawFireCone(g, x, y, dir, radius, alpha) {
   g.fillTriangle(x + dir * 20, y - 14, x + dir * length * 0.78, y - width * 0.25, x + dir * length * 0.78, y + width * 0.25);
 }
 
+function drawWideSpellCone(g, x, y, dir, radius, color, alpha) {
+  const length = radius * 1.9;
+  const width = radius * 1.18;
+  g.fillStyle(color, alpha);
+  g.beginPath();
+  g.moveTo(x, y - 40);
+  g.lineTo(x + dir * length * 0.58, y - width * 0.62);
+  g.lineTo(x + dir * length, y - width * 0.36);
+  g.lineTo(x + dir * length, y + width * 0.36);
+  g.lineTo(x + dir * length * 0.58, y + width * 0.62);
+  g.lineTo(x, y + 28);
+  g.closePath();
+  g.fillPath();
+}
+
 function drawFrostCone(g, x, y, dir, radius, alpha) {
   const length = radius * 1.25;
   const width = radius * 0.86;
@@ -1834,8 +1903,33 @@ function drawLightningImpacts(g, targets, p) {
     g.strokeCircle(target.x, target.y - 18, radius * (1 - p * 0.25));
     g.lineStyle(2, 0xffffff, 0.7 * p);
     g.lineBetween(target.x - radius * 0.55, target.y - 18, target.x + radius * 0.55, target.y - 18);
-    g.lineBetween(target.x, target.y - 18 - radius * 0.55, target.x, target.y - 18 + radius * 0.55);
+  g.lineBetween(target.x, target.y - 18 - radius * 0.55, target.x, target.y - 18 + radius * 0.55);
   }
+}
+
+function drawSnowStar(g, x, y, radius, color, alpha) {
+  g.lineStyle(2, color, alpha);
+  for (let i = 0; i < 3; i += 1) {
+    const a = (i / 3) * Math.PI;
+    g.lineBetween(x - Math.cos(a) * radius, y - Math.sin(a) * radius, x + Math.cos(a) * radius, y + Math.sin(a) * radius);
+  }
+}
+
+function drawElectricStar(g, x, y, radius, p) {
+  g.lineStyle(4, 0xa9edff, 0.82 * p);
+  for (let i = 0; i < 8; i += 1) {
+    const a = (i / 8) * Math.PI * 2;
+    const mid = radius * (0.28 + (i % 2) * 0.18);
+    const outer = radius * (0.8 + (i % 3) * 0.16);
+    g.lineBetween(
+      x + Math.cos(a) * mid,
+      y + Math.sin(a) * mid,
+      x + Math.cos(a + (i % 2 ? 0.08 : -0.08)) * outer,
+      y + Math.sin(a + (i % 2 ? 0.08 : -0.08)) * outer,
+    );
+  }
+  g.lineStyle(1, 0xffffff, 0.95 * p);
+  g.strokeCircle(x, y, radius * 0.34);
 }
 
 function getGoldValue(enemy) {
