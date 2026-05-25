@@ -1,3 +1,5 @@
+import { ensureBlackhavenMusic, toggleBlackhavenMusic } from "../systems/audio.js";
+
 export class MenuScene extends Phaser.Scene {
   constructor() {
     super("MenuScene");
@@ -64,17 +66,23 @@ export class MenuScene extends Phaser.Scene {
       plate.strokeRoundedRect(-140, -29, 280, 58, 4);
       label.setColor("#f5e8ce");
     });
-    button.on("pointerdown", () => this.scene.start("CharacterScene"));
+    button.on("pointerdown", () => this.startGame());
 
-    this.input.keyboard.on("keydown-ENTER", () => this.scene.start("CharacterScene"));
+    this.input.keyboard.on("keydown-ENTER", () => this.startGame());
+    this.input.keyboard.on("keydown-M", () => toggleBlackhavenMusic(this));
 
-    this.add.text(width * 0.92, height * 0.9, "ENTER Start  |  WASD/Pfeile  |  RMB/1 Feuer  Q/2 Blitz  E/3 Frost  LMB/J Stab", {
+    this.add.text(width * 0.92, height * 0.9, "ENTER Start  |  M Musik  |  WASD/Pfeile  |  RMB/1 Feuer  Q/2 Blitz  E/3 Frost  LMB/J Stab", {
       fontFamily: "Arial, sans-serif",
       fontSize: "13px",
       color: "#b8ab94",
       stroke: "#050405",
       strokeThickness: 4,
     }).setOrigin(1, 0.5);
+  }
+
+  startGame() {
+    ensureBlackhavenMusic(this);
+    this.scene.start("CharacterScene");
   }
 }
 

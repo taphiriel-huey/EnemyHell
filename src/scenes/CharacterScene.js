@@ -1,4 +1,5 @@
 import { formatRunTime, loadProgress } from "../systems/progress.js";
+import { ensureBlackhavenMusic, toggleBlackhavenMusic } from "../systems/audio.js";
 
 const STAT_ROWS = [
   ["Vitalitaet", "160 HP", "Fehler werden ueberlebt, aber nicht vergeben."],
@@ -61,6 +62,7 @@ export class CharacterScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-ENTER", () => this.startRun());
     this.input.keyboard.on("keydown-SPACE", () => this.startRun());
     this.input.keyboard.on("keydown-ESC", () => this.scene.start("MenuScene"));
+    this.input.keyboard.on("keydown-M", () => toggleBlackhavenMusic(this));
     this.input.keyboard.on("keydown-LEFT", () => this.changeFocus(-1));
     this.input.keyboard.on("keydown-A", () => this.changeFocus(-1));
     this.input.keyboard.on("keydown-RIGHT", () => this.changeFocus(1));
@@ -71,6 +73,7 @@ export class CharacterScene extends Phaser.Scene {
   }
 
   startRun() {
+    ensureBlackhavenMusic(this);
     this.scene.start("GameScene", { startFocus: START_FOCI[this.selectedFocusIndex].key });
   }
 
