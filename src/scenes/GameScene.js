@@ -172,6 +172,9 @@ export class GameScene extends Phaser.Scene {
     this.churchyardImage = this.add.image(640, 360, "blackhavenChurchyardConcept").setDepth(-2);
     fitImageCover(this.churchyardImage, this.scale.width, this.scale.height);
     this.churchyardImage.setAlpha(0);
+    this.forestImage = this.add.image(640, 360, "blackhavenForestConcept").setDepth(-2);
+    fitImageCover(this.forestImage, this.scale.width, this.scale.height);
+    this.forestImage.setAlpha(0);
     this.bgVeil = this.add.graphics().setDepth(-1);
     this.bg = this.add.graphics().setDepth(0);
     this.groundImage = this.add.image(640, 628, "blackhavenGroundConcept").setDepth(17);
@@ -191,12 +194,15 @@ export class GameScene extends Phaser.Scene {
     this.bgVeil.clear();
     this.bgImage.setAlpha(this.section === 1 ? 0.68 : 0);
     this.churchyardImage.setAlpha(this.section === 2 ? 0.72 : 0);
+    this.forestImage.setAlpha(this.section === 3 ? 0.74 : 0);
     this.groundImage.setAlpha(this.section === 1 ? 0.72 : 0);
     drawWorld(this.bg, this.scale.width, this.scale.height, this.section, this.section === 1);
     if (this.section === 1) {
       drawBackgroundConceptVeil(this.bgVeil, this.scale.width, this.scale.height);
     } else if (this.section === 2) {
       drawChurchyardConceptVeil(this.bgVeil, this.scale.width, this.scale.height);
+    } else if (this.section === 3) {
+      drawForestConceptVeil(this.bgVeil, this.scale.width, this.scale.height);
     }
   }
 
@@ -441,7 +447,7 @@ export class GameScene extends Phaser.Scene {
 
   checkRunEnd() {
     if (!this.waves.bossDefeated || this.victory) return;
-    if (this.section === 1) {
+    if (this.section < 3) {
       this.showSectionClear();
       return;
     }
@@ -928,8 +934,10 @@ export class GameScene extends Phaser.Scene {
     const dim = this.add.rectangle(640, 360, 1280, 720, 0x070607, 0.7);
     const g = this.add.graphics();
     drawSectionPanel(g);
-    const title = this.add.text(640, 130, "DORFPLATZ GESICHERT", { fontFamily: "Georgia, serif", fontSize: "38px", color: "#f1dec0", stroke: "#070607", strokeThickness: 5 }).setOrigin(0.5);
-    const body = this.add.text(640, 180, "Der Torbrecher liegt in der Asche. Hinter der Kapelle oeffnen sich neue Seitenwege.", {
+    const nextSection = this.section + 1;
+    const intermission = getIntermissionCopy(this.section);
+    const title = this.add.text(640, 130, intermission.title, { fontFamily: "Georgia, serif", fontSize: "38px", color: "#f1dec0", stroke: "#070607", strokeThickness: 5 }).setOrigin(0.5);
+    const body = this.add.text(640, 180, intermission.body, {
       fontFamily: "Arial, sans-serif",
       fontSize: "17px",
       color: "#cdbb9d",
@@ -951,16 +959,16 @@ export class GameScene extends Phaser.Scene {
 
     const healCost = 35;
     const options = [
-      createIntermissionOption(this, 402, 366, "1", "Wunden binden", `${healCost} Gold`, "+45 HP vor Abschnitt 2", depth + 2, this.gold >= healCost, () => {
+      createIntermissionOption(this, 402, 366, "1", "Wunden binden", `${healCost} Gold`, `+45 HP vor Abschnitt ${nextSection}`, depth + 2, this.gold >= healCost, () => {
         this.gold -= healCost;
         this.player.hp = Math.min(this.player.maxHp, this.player.hp + 45);
         overlay.destroy();
-        this.startSection(2);
+        this.startSection(nextSection);
       }),
       createIntermissionOption(this, 640, 366, "2", "Arkaner Atem", "frei", "Mana voll auffuellen", depth + 2, true, () => {
         this.player.mana = this.player.maxMana;
         overlay.destroy();
-        this.startSection(2);
+        this.startSection(nextSection);
       }),
       createIntermissionOption(this, 878, 366, "3", "Karte studieren", "frei", "Eine Karte waehlen", depth + 2, true, () => {
         overlay.destroy();
@@ -1019,7 +1027,7 @@ export class GameScene extends Phaser.Scene {
       card.apply(this.spells);
       this.cardsPicked += 1;
       this.pausedForCard = false;
-      this.startSection(2);
+      this.startSection(this.section + 1);
     });
   }
 
@@ -1043,7 +1051,7 @@ export class GameScene extends Phaser.Scene {
     for (const sprite of this.enemySprites.values()) sprite.destroy();
     this.enemySprites.clear();
     this.drawSectionBackdrop();
-    this.addFloatText("Abschnitt 2: Kapellentor", 640, 164, "#f3d69d");
+    this.addFloatText(`Abschnitt ${sectionId}: ${this.waves.sectionShortTitle}`, 640, 164, "#f3d69d");
   }
 
   togglePauseMenu(force) {
@@ -1323,7 +1331,7 @@ function getDefeatLine(wave) {
 }
 
 function drawWorld(g, w, h, section = 1, conceptUnderlay = false) {
-  if (section === 2) {
+  if (section === 2 || section === 3) {
     drawChapelWorld(g, w, h);
     return;
   }
@@ -1384,6 +1392,17 @@ function drawChurchyardConceptVeil(g, w, h) {
   g.lineBetween(70, 590, 1230, 548);
 }
 
+function drawForestConceptVeil(g, w, h) {
+  g.fillStyle(0x020406, 0.1);
+  g.fillRect(0, 0, w, h);
+  g.fillGradientStyle(0x020304, 0x020304, 0x060507, 0x060507, 0.05, 0.14, 0.5, 0.62);
+  g.fillRect(0, 0, w, h);
+  g.fillStyle(0x030405, 0.24);
+  g.fillRect(0, 565, w, 155);
+  g.lineStyle(1, 0x9f8a62, 0.16);
+  g.lineBetween(70, 590, 1230, 548);
+}
+
 function drawChapelWorld(g, w, h) {
   g.fillStyle(0x05070a, 0.28);
   g.fillRect(0, 0, w, h);
@@ -1391,9 +1410,22 @@ function drawChapelWorld(g, w, h) {
   g.fillRect(0, 565, w, 155);
 }
 
+function getIntermissionCopy(section) {
+  if (section === 2) {
+    return {
+      title: "KAPELLENTOR GESICHERT",
+      body: "Der Kapellenwaechter bricht. Jenseits der Mauern fuehrt ein Waldweg tiefer in die brennende Nacht.",
+    };
+  }
+  return {
+    title: "DORFPLATZ GESICHERT",
+    body: "Der Torbrecher liegt in der Asche. Hinter der Kapelle oeffnen sich neue Seitenwege.",
+  };
+}
+
 function drawGround(g, section = 1) {
-  const isChapel = section === 2;
-  if (!isChapel) {
+  const isLaterSection = section >= 2;
+  if (!isLaterSection) {
     g.fillStyle(0x070607, 0.36);
     g.fillRect(0, 565, 1280, 155);
     g.fillStyle(0x171113, 0.34);
@@ -1403,19 +1435,20 @@ function drawGround(g, section = 1) {
     g.lineBetween(120, 650, 1180, 606);
     return;
   }
-  g.fillStyle(isChapel ? 0x090b10 : 0x0d0c0d, 0.92);
+  const isForest = section === 3;
+  g.fillStyle(isForest ? 0x07090a : 0x090b10, 0.92);
   g.fillRect(0, 565, 1280, 155);
-  g.fillStyle(isChapel ? 0x11141b : 0x171113, 0.96);
+  g.fillStyle(isForest ? 0x10120f : 0x11141b, 0.96);
   g.fillEllipse(625, 620, 1120, 138);
-  g.fillStyle(isChapel ? 0x1a1a23 : 0x211416, 0.42);
+  g.fillStyle(isForest ? 0x171813 : 0x1a1a23, 0.42);
   g.fillEllipse(360, 650, 520, 74);
   g.fillEllipse(890, 636, 520, 62);
-  g.lineStyle(1, isChapel ? 0x6f6c82 : 0x6a4c36, 0.42);
+  g.lineStyle(1, isForest ? 0x80704d : 0x6f6c82, 0.42);
   g.lineBetween(70, 590, 1230, 548);
   g.lineBetween(120, 650, 1180, 606);
-  drawGroundStones(g, isChapel);
-  drawGroundProps(g, isChapel);
-  drawGroundEmbers(g, isChapel);
+  drawGroundStones(g, true);
+  drawGroundProps(g, true);
+  drawGroundEmbers(g, true);
 }
 
 function drawGroundStones(g, isChapel) {

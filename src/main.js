@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=churchyard-bg-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=churchyard-bg-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=churchyard-bg-1";
-import { GameScene } from "./scenes/GameScene.js?v=churchyard-bg-1";
+import { BootScene } from "./scenes/BootScene.js?v=forest-section-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=forest-section-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=forest-section-1";
+import { GameScene } from "./scenes/GameScene.js?v=forest-section-1";
 
 const config = {
   type: Phaser.AUTO,

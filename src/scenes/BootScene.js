@@ -6,6 +6,7 @@ export class BootScene extends Phaser.Scene {
   preload() {
     this.load.image("blackhavenBackgroundConcept", "assets/concept/blackhaven-background-concept.png");
     this.load.image("blackhavenChurchyardConcept", "assets/concept/blackhaven-churchyard-concept.png");
+    this.load.image("blackhavenForestConcept", "assets/concept/blackhaven-forest-concept.png");
     this.load.image("blackhavenGroundConcept", "assets/concept/blackhaven-ground-strip-concept.png");
     this.load.image("blackhavenStartArt", "assets/concept/start-screen-art.png");
     this.load.image("playerMageConcept", "assets/sprites/player/mage-concept.png");
