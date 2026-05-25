@@ -43,9 +43,11 @@ const LIGHTNING_IMPACT_ANIM = "lightning-impact-fx";
 const LIGHTNING_IMPACT_FRAMES = Array.from({ length: 8 }, (_, frame) => frame);
 const FROST_AREA_ANIM = "frost-area-fx";
 const FROST_AREA_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
+const SKELETON_WALK_ANIM = "skeleton-walk";
+const SKELETON_WALK_FRAMES = Array.from({ length: 8 }, (_, frame) => frame);
 const USE_CONCEPT_ENEMY_SPRITES = true;
 const CONCEPT_ENEMY_TEXTURES = {
-  skeleton: "enemySkeletonConcept",
+  skeleton: "enemySkeletonWalk",
   zombie: "enemyZombieConcept",
   ghoul: "enemyGhoulConcept",
   ogre: "enemyOgreConcept",
@@ -114,6 +116,7 @@ export class GameScene extends Phaser.Scene {
     this.createInput();
     this.createWorld();
     createPlayerAnimations(this);
+    createEnemyAnimations(this);
     createFxAnimations(this);
     this.playerLayer = this.add.graphics().setDepth(29);
     this.mageTextureKey = USE_CONCEPT_PLAYER_SPRITE ? CONCEPT_PLAYER_IDLE_TEXTURE : "mage";
@@ -490,6 +493,9 @@ export class GameScene extends Phaser.Scene {
         this.enemySprites.set(enemy, sprite);
       }
       if (sprite.texture.key !== textureKey) sprite.setTexture(textureKey);
+      if (enemy.type === "skeleton" && sprite.anims.currentAnim?.key !== SKELETON_WALK_ANIM) {
+        sprite.anims.play(SKELETON_WALK_ANIM, true);
+      }
       const recoilLift = enemy.recoil > 0 ? Math.sin(enemy.recoil * 55) * 5 : 0;
       const usesConceptSprite = isConceptEnemyTexture(textureKey);
       applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, recoilLift);
@@ -1600,6 +1606,17 @@ function createPlayerAnimations(scene) {
       frames: CONCEPT_PLAYER_CAST_FRAMES.map((frame) => ({ key: CONCEPT_PLAYER_CAST_TEXTURE, frame })),
       frameRate: 32,
       repeat: 0,
+    });
+  }
+}
+
+function createEnemyAnimations(scene) {
+  if (scene.textures.exists("enemySkeletonWalk") && !scene.anims.exists(SKELETON_WALK_ANIM)) {
+    scene.anims.create({
+      key: SKELETON_WALK_ANIM,
+      frames: SKELETON_WALK_FRAMES.map((frame) => ({ key: "enemySkeletonWalk", frame })),
+      frameRate: 10,
+      repeat: -1,
     });
   }
 }
