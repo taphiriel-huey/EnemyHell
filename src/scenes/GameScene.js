@@ -169,6 +169,9 @@ export class GameScene extends Phaser.Scene {
     this.bgImage = this.add.image(640, 360, "blackhavenBackgroundConcept").setDepth(-2);
     this.bgImage.setDisplaySize(this.scale.width, this.scale.height);
     this.bgImage.setAlpha(this.section === 1 ? 0.68 : 0);
+    this.churchyardImage = this.add.image(640, 360, "blackhavenChurchyardConcept").setDepth(-2);
+    fitImageCover(this.churchyardImage, this.scale.width, this.scale.height);
+    this.churchyardImage.setAlpha(0);
     this.bgVeil = this.add.graphics().setDepth(-1);
     this.bg = this.add.graphics().setDepth(0);
     this.groundImage = this.add.image(640, 628, "blackhavenGroundConcept").setDepth(17);
@@ -187,10 +190,13 @@ export class GameScene extends Phaser.Scene {
     this.bg.clear();
     this.bgVeil.clear();
     this.bgImage.setAlpha(this.section === 1 ? 0.68 : 0);
+    this.churchyardImage.setAlpha(this.section === 2 ? 0.72 : 0);
     this.groundImage.setAlpha(this.section === 1 ? 0.72 : 0);
     drawWorld(this.bg, this.scale.width, this.scale.height, this.section, this.section === 1);
     if (this.section === 1) {
       drawBackgroundConceptVeil(this.bgVeil, this.scale.width, this.scale.height);
+    } else if (this.section === 2) {
+      drawChurchyardConceptVeil(this.bgVeil, this.scale.width, this.scale.height);
     }
   }
 
@@ -1367,28 +1373,22 @@ function drawBackgroundConceptVeil(g, w, h) {
   g.lineBetween(70, 590, 1230, 548);
 }
 
-function drawChapelWorld(g, w, h) {
-  g.fillGradientStyle(0x05070a, 0x0d1118, 0x171221, 0x070607, 1);
+function drawChurchyardConceptVeil(g, w, h) {
+  g.fillStyle(0x030406, 0.12);
   g.fillRect(0, 0, w, h);
-  g.fillStyle(0x24304a, 0.35);
-  g.fillCircle(980, 185, 190);
-  g.fillStyle(0x4d1d2a, 0.32);
-  g.fillCircle(1050, 265, 245);
-  g.fillStyle(0x08090c, 0.96);
-  for (let i = 0; i < 10; i += 1) {
-    const x = i * 145 - 40;
-    const roof = 285 + (i % 2) * 35;
-    g.fillRect(x, roof, 96, 240);
-    g.fillTriangle(x - 22, roof, x + 48, roof - 74, x + 118, roof);
-    g.fillStyle(0x7e663d, 0.38);
-    g.fillRect(x + 36, roof + 62, 14, 36);
-    g.fillStyle(0x08090c, 0.96);
-  }
-  g.fillStyle(0x2f3e54, 0.42);
-  for (let i = 0; i < 12; i += 1) {
-    const x = 140 + i * 88;
-    g.fillTriangle(x, 528, x + 18, 420 - (i % 3) * 28, x + 42, 528);
-  }
+  g.fillGradientStyle(0x020203, 0x020203, 0x060507, 0x060507, 0.08, 0.12, 0.58, 0.64);
+  g.fillRect(0, 0, w, h);
+  g.fillStyle(0x050607, 0.26);
+  g.fillRect(0, 565, w, 155);
+  g.lineStyle(1, 0xd0a76a, 0.18);
+  g.lineBetween(70, 590, 1230, 548);
+}
+
+function drawChapelWorld(g, w, h) {
+  g.fillStyle(0x05070a, 0.28);
+  g.fillRect(0, 0, w, h);
+  g.fillStyle(0x06070a, 0.3);
+  g.fillRect(0, 565, w, 155);
 }
 
 function drawGround(g, section = 1) {
@@ -2098,4 +2098,9 @@ function getReachablePickupPosition(x, y, player) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function fitImageCover(image, width, height) {
+  const scale = Math.max(width / image.width, height / image.height);
+  image.setScale(scale);
 }
