@@ -150,28 +150,28 @@ export class CharacterScene extends Phaser.Scene {
   drawMagePanel() {
     const g = this.add.graphics();
     g.fillStyle(0x060507, 0.58);
-    g.fillEllipse(354, 580, 420, 92);
+    g.fillEllipse(292, 586, 350, 78);
     g.lineStyle(2, 0x6ca8c9, 0.26);
-    g.strokeEllipse(350, 422, 258, 366);
+    g.strokeEllipse(298, 428, 228, 340);
     g.lineStyle(1, 0xc29151, 0.32);
-    g.strokeEllipse(350, 582, 360, 74);
+    g.strokeEllipse(294, 588, 310, 62);
 
     if (this.textures.exists("playerMageCast")) {
-      const mage = this.add.sprite(352, 570, "playerMageCast", 0).setOrigin(0.5, 1);
-      mage.setScale(1.42);
+      const mage = this.add.sprite(304, 586, "playerMageCast", 0).setOrigin(0.5, 1);
+      mage.setScale(1.22);
       mage.setAlpha(0.96);
     } else if (this.textures.exists("playerMageConcept")) {
-      const mage = this.add.image(352, 570, "playerMageConcept").setOrigin(0.5, 1);
-      mage.setDisplaySize(250, 390);
+      const mage = this.add.image(304, 586, "playerMageConcept").setOrigin(0.5, 1);
+      mage.setDisplaySize(220, 340);
     }
 
-    this.add.text(78, 525, "Arkaner Duellant", font(22, "#f4dfbd"));
-    this.add.text(78, 557, "Magie als Kampfkunst. Kontrolle, Rhythmus, Dominanz.", {
+    this.add.text(78, 528, "Arkaner Duellant", font(22, "#f4dfbd"));
+    this.add.text(78, 560, "Magie als Kampfkunst. Kontrolle, Rhythmus, Dominanz.", {
       ...font(13, "#bfa985"),
       fontFamily: "Arial, sans-serif",
-      wordWrap: { width: 330 },
+      wordWrap: { width: 300 },
     });
-    this.drawRunMemory(78, 606);
+    this.drawRunMemory(78, 608);
   }
 
   drawRunMemory(x, y) {
@@ -226,18 +226,18 @@ export class CharacterScene extends Phaser.Scene {
 
   drawEquipmentPanel() {
     const g = this.add.graphics();
-    panel(g, 470, 572, 385, 88);
-    this.add.text(502, 594, "Ausruestung", font(16, "#f4dfbd"));
+    panel(g, 470, 560, 385, 106);
+    this.add.text(502, 582, "Ausruestung", font(16, "#f4dfbd"));
 
     EQUIPMENT_SLOTS.forEach(([slot, item, bonus], index) => {
       const x = 502 + index * 84;
-      const y = 622;
+      const y = 610;
       g.fillStyle(0x111015, 0.92);
       g.lineStyle(1, 0x6f5638, 0.9);
       g.fillRoundedRect(x, y, 70, 24, 3);
       g.strokeRoundedRect(x, y, 70, 24, 3);
       this.add.text(x + 35, y + 5, slot, font(11, "#caa46c")).setOrigin(0.5, 0);
-      this.add.text(x + 35, y + 28, item, {
+      this.add.text(x + 35, y + 30, item, {
         ...font(10, "#f0ddbd"),
         fontFamily: "Arial, sans-serif",
         wordWrap: { width: 74 },
