@@ -1,4 +1,36 @@
-import { ensureBlackhavenMusic, toggleBlackhavenMusic } from "../systems/audio.js";
+import { isBlackhavenMusicEnabled, toggleBlackhavenMusic } from "../systems/audio.js";
+
+const START_CHOICES = [
+  {
+    id: 1,
+    hotkey: "1",
+    title: "Abschnitt 1",
+    subtitle: "Blackhaven / Dorfplatz",
+    note: "Run von vorne",
+  },
+  {
+    id: 2,
+    hotkey: "2",
+    title: "Abschnitt 2",
+    subtitle: "Kapellentor",
+    note: "Direkter Leveltest",
+  },
+  {
+    id: 3,
+    hotkey: "3",
+    title: "Abschnitt 3",
+    subtitle: "Blutmondhain",
+    note: "Spaeter Test",
+  },
+  {
+    id: "horde",
+    hotkey: "H",
+    title: "Hordemodus",
+    subtitle: "MUSS JA ;)",
+    note: "Platzhalter",
+    disabled: true,
+  },
+];
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -7,6 +39,8 @@ export class MenuScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
+    this.selectedStartIndex = 0;
+    this.startChoiceCards = [];
     this.cameras.main.setBackgroundColor("#08070a");
     drawMenuBackdrop(this, width, height);
 
@@ -36,6 +70,8 @@ export class MenuScene extends Phaser.Scene {
       wordWrap: { width: 520 },
       lineSpacing: 4,
     }).setOrigin(0, 0.5);
+
+    this.drawStartChoicePanel(width, height);
 
     const button = this.add.container(width * 0.08 + 140, height * 0.82);
     const plate = this.add.graphics();
@@ -69,9 +105,29 @@ export class MenuScene extends Phaser.Scene {
     button.on("pointerdown", () => this.startGame());
 
     this.input.keyboard.on("keydown-ENTER", () => this.startGame());
-    this.input.keyboard.on("keydown-M", () => toggleBlackhavenMusic(this));
+    this.input.keyboard.on("keydown-LEFT", () => this.changeStartChoice(-1));
+    this.input.keyboard.on("keydown-A", () => this.changeStartChoice(-1));
+    this.input.keyboard.on("keydown-RIGHT", () => this.changeStartChoice(1));
+    this.input.keyboard.on("keydown-D", () => this.changeStartChoice(1));
+    this.input.keyboard.on("keydown-UP", () => this.changeStartChoice(-1));
+    this.input.keyboard.on("keydown-W", () => this.changeStartChoice(-1));
+    this.input.keyboard.on("keydown-DOWN", () => this.changeStartChoice(1));
+    this.input.keyboard.on("keydown-S", () => this.changeStartChoice(1));
+    this.input.keyboard.on("keydown-ONE", () => this.setStartChoice(0));
+    this.input.keyboard.on("keydown-TWO", () => this.setStartChoice(1));
+    this.input.keyboard.on("keydown-THREE", () => this.setStartChoice(2));
+    this.input.keyboard.on("keydown-H", () => this.setStartChoice(3));
+    this.input.keyboard.on("keydown-M", () => this.toggleMusic());
 
-    this.add.text(width * 0.92, height * 0.9, "ENTER Start  |  M Musik  |  WASD/Pfeile  |  RMB/1 Feuer  Q/2 Blitz  E/3 Frost  LMB/J Stab", {
+    this.musicHint = this.add.text(width * 0.08, height * 0.9, this.getMusicHintText(), {
+      fontFamily: "Arial, sans-serif",
+      fontSize: "13px",
+      color: "#b8ab94",
+      stroke: "#050405",
+      strokeThickness: 4,
+    }).setOrigin(0, 0.5);
+
+    this.add.text(width * 0.92, height * 0.9, "1-3 Abschnitt  |  Pfeile Auswahl  |  ENTER Start  |  WASD/Pfeile  |  RMB/1 Feuer  Q/2 Blitz  E/3 Frost  LMB/J Stab", {
       fontFamily: "Arial, sans-serif",
       fontSize: "13px",
       color: "#b8ab94",
@@ -81,9 +137,105 @@ export class MenuScene extends Phaser.Scene {
   }
 
   startGame() {
-    ensureBlackhavenMusic(this);
-    this.scene.start("CharacterScene");
+    const choice = START_CHOICES[this.selectedStartIndex];
+    if (choice.disabled) return;
+    this.scene.start("CharacterScene", { startSection: choice.id });
   }
+
+  toggleMusic() {
+    toggleBlackhavenMusic(this);
+    this.musicHint?.setText(this.getMusicHintText());
+  }
+
+  getMusicHintText() {
+    return `M Musik: ${isBlackhavenMusicEnabled(this) ? "an" : "aus"}`;
+  }
+
+  changeStartChoice(direction) {
+    for (let step = 1; step <= START_CHOICES.length; step += 1) {
+      const index = (this.selectedStartIndex + direction * step + START_CHOICES.length) % START_CHOICES.length;
+      if (!START_CHOICES[index].disabled) {
+        this.setStartChoice(index);
+        return;
+      }
+    }
+  }
+
+  setStartChoice(index) {
+    const choice = START_CHOICES[index];
+    if (!choice || choice.disabled) return;
+    this.selectedStartIndex = index;
+    this.drawStartChoiceSelection();
+  }
+
+  drawStartChoicePanel(width, height) {
+    this.add.text(width * 0.64, height * 0.51, "Starttest", {
+      fontFamily: "Georgia, serif",
+      fontSize: "24px",
+      color: "#f1dec0",
+      stroke: "#070607",
+      strokeThickness: 5,
+    }).setOrigin(0, 0.5);
+    this.add.text(width * 0.64, height * 0.555, "Kapitel / Biom / Modus", {
+      fontFamily: "Arial, sans-serif",
+      fontSize: "13px",
+      color: "#bfa985",
+      stroke: "#050405",
+      strokeThickness: 4,
+    }).setOrigin(0, 0.5);
+
+    START_CHOICES.forEach((choice, index) => {
+      const x = width * 0.64 + (index % 2) * 218;
+      const y = height * 0.605 + Math.floor(index / 2) * 78;
+      this.startChoiceCards.push(createStartChoiceCard(this, x, y, choice, index));
+    });
+    this.drawStartChoiceSelection();
+  }
+
+  drawStartChoiceSelection() {
+    if (!this.startChoiceCards) return;
+    this.startChoiceCards.forEach((card, index) => {
+      card.redraw(index === this.selectedStartIndex);
+    });
+  }
+}
+
+function createStartChoiceCard(scene, x, y, choice, index) {
+  const g = scene.add.graphics();
+  const key = scene.add.text(x + 14, y + 10, choice.hotkey, {
+    fontFamily: "Georgia, serif",
+    fontSize: "13px",
+    color: choice.disabled ? "#6c6254" : "#caa46c",
+  });
+  const title = scene.add.text(x + 40, y + 8, choice.title, {
+    fontFamily: "Georgia, serif",
+    fontSize: "15px",
+    color: choice.disabled ? "#776d5f" : "#f0ddbd",
+  });
+  const subtitle = scene.add.text(x + 40, y + 29, choice.subtitle, {
+    fontFamily: "Arial, sans-serif",
+    fontSize: "11px",
+    color: choice.disabled ? "#625a50" : "#bfa985",
+  });
+  const note = scene.add.text(x + 14, y + 50, choice.note, {
+    fontFamily: "Arial, sans-serif",
+    fontSize: "10px",
+    color: choice.disabled ? "#5f584f" : "#8f846f",
+  });
+  const zone = scene.add.zone(x, y, 196, 66).setOrigin(0, 0);
+  if (!choice.disabled) {
+    zone.setInteractive({ useHandCursor: true });
+    zone.on("pointerdown", () => scene.setStartChoice(index));
+  }
+  const redraw = (selected) => {
+    g.clear();
+    g.fillStyle(selected ? 0x211820 : 0x100e12, choice.disabled ? 0.42 : selected ? 0.96 : 0.78);
+    g.lineStyle(selected ? 2 : 1, selected ? 0xffdf9d : 0x8f683b, choice.disabled ? 0.42 : selected ? 1 : 0.72);
+    g.fillRoundedRect(x, y, 196, 66, 4);
+    g.strokeRoundedRect(x, y, 196, 66, 4);
+  };
+  redraw(false);
+  return { parts: [g, key, title, subtitle, note, zone], redraw };
 }
 
 function drawMenuBackdrop(scene, width, height) {

@@ -1,5 +1,5 @@
 import { formatRunTime, loadProgress } from "../systems/progress.js";
-import { ensureBlackhavenMusic, toggleBlackhavenMusic } from "../systems/audio.js";
+import { toggleBlackhavenMusic } from "../systems/audio.js";
 
 const STAT_ROWS = [
   ["Vitalitaet", "160 HP", "Fehler werden ueberlebt, aber nicht vergeben."],
@@ -44,6 +44,10 @@ export class CharacterScene extends Phaser.Scene {
     super("CharacterScene");
   }
 
+  init(data) {
+    this.startSectionId = data?.startSection ?? 1;
+  }
+
   create() {
     this.selectedFocusIndex = 0;
     this.focusCards = [];
@@ -73,8 +77,10 @@ export class CharacterScene extends Phaser.Scene {
   }
 
   startRun() {
-    ensureBlackhavenMusic(this);
-    this.scene.start("GameScene", { startFocus: START_FOCI[this.selectedFocusIndex].key });
+    this.scene.start("GameScene", {
+      startFocus: START_FOCI[this.selectedFocusIndex].key,
+      startSection: this.startSectionId,
+    });
   }
 
   changeFocus(direction) {
@@ -114,6 +120,10 @@ export class CharacterScene extends Phaser.Scene {
   drawHeader() {
     this.add.text(640, 38, "MAGIER VON BLACKHAVEN", font(34, "#f2dec0")).setOrigin(0.5, 0);
     this.add.text(640, 82, "Run-Vorbereitung", font(16, "#c99f63")).setOrigin(0.5, 0);
+    this.add.text(640, 108, `Start: Abschnitt ${this.startSectionId}`, {
+      ...font(13, "#a99b82"),
+      fontFamily: "Arial, sans-serif",
+    }).setOrigin(0.5, 0);
   }
 
   drawMagePanel() {

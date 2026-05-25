@@ -24,13 +24,27 @@ export function ensureBlackhavenMusic(scene) {
 }
 
 export function toggleBlackhavenMusic(scene) {
-  const music = ensureBlackhavenMusic(scene);
+  const existing = scene.registry.get(MUSIC_REGISTRY_KEY) ?? scene.registry.get(MUSIC_FALLBACK_KEY);
+  if (!existing) {
+    ensureBlackhavenMusic(scene);
+    return true;
+  }
+  const music = existing;
   if (music.setMute) {
     music.setMute(!music.mute);
+    if (!music.isPlaying && !music.mute) music.play();
     return !music.mute;
   }
   music.muted = !music.muted;
+  if (!music.muted && music.paused) music.play().catch(() => {});
   return !music.muted;
+}
+
+export function isBlackhavenMusicEnabled(scene) {
+  const music = scene.registry.get(MUSIC_REGISTRY_KEY) ?? scene.registry.get(MUSIC_FALLBACK_KEY);
+  if (!music) return false;
+  if (music.setMute) return music.isPlaying && !music.mute;
+  return !music.paused && !music.muted;
 }
 
 function ensureFallbackMusic(scene) {

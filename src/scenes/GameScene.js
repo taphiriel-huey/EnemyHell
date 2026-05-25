@@ -84,10 +84,11 @@ export class GameScene extends Phaser.Scene {
 
   init(data) {
     this.startFocus = data?.startFocus ?? "pyromantic";
+    this.startSection = data?.startSection ?? 1;
   }
 
   create() {
-    this.section = 1;
+    this.section = this.startSection;
     this.player = createPlayer();
     this.spells = createSpellState();
     this.waves = createWaveSystem(this.section);
@@ -103,7 +104,7 @@ export class GameScene extends Phaser.Scene {
     this.pausedForMenu = false;
     this.pausedForSection = false;
     this.pauseOverlay = null;
-    this.nextCardAt = 60;
+    this.nextCardAt = this.section === 1 ? 60 : 45;
     this.gameOver = false;
     this.victory = false;
     this.debugView = false;
@@ -127,6 +128,7 @@ export class GameScene extends Phaser.Scene {
     this.enemySprites = new Map();
     this.hud = createHud(this);
     this.addFloatText(`Fokus: ${this.runFocusLabel}`, 640, 164, "#f3d69d");
+    if (this.section > 1) this.addFloatText(`Abschnitt ${this.section}: ${this.waves.sectionShortTitle}`, 640, 194, "#d8b976");
   }
 
   createInput() {
