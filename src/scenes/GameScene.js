@@ -77,7 +77,7 @@ const CONCEPT_ENEMY_TEXTURES = {
 const CONCEPT_ENEMY_HEIGHTS = {
   skeleton: 72,
   zombie: 94,
-  ghoul: 86,
+  ghoul: 124,
   ogre: 162,
 };
 
