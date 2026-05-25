@@ -17,10 +17,10 @@ const SECTION_LAYOUTS = {
     depth: { nearY: 650, farY: 500, min: 0.84, max: 1.08 },
   },
   2: {
-    bounds: { left: 112, right: 690, top: 535, bottom: 650 },
-    pickupBounds: { left: 118, right: 655, top: 545, bottom: 635 },
-    playerStart: { x: 260, y: 592 },
-    depth: { nearY: 650, farY: 535, min: 0.8, max: 1.08 },
+    bounds: { left: 112, right: 690, top: 558, bottom: 650 },
+    pickupBounds: { left: 118, right: 655, top: 568, bottom: 635 },
+    playerStart: { x: 260, y: 604 },
+    depth: { nearY: 650, farY: 558, min: 0.8, max: 1.08 },
   },
   3: {
     bounds: { left: 118, right: 710, top: 540, bottom: 650 },
