@@ -9,6 +9,26 @@ import { formatRunTime, recordRunProgress } from "../systems/progress.js";
 const BOUNDS = { left: 90, right: 690, top: 380, bottom: 650 };
 const PICKUP_BOUNDS = { left: 90, right: 660, top: 395, bottom: 635 };
 const PICKUP_MIN_PLAYER_DISTANCE = 150;
+const SECTION_LAYOUTS = {
+  1: {
+    bounds: BOUNDS,
+    pickupBounds: PICKUP_BOUNDS,
+    playerStart: { x: 270, y: 520 },
+    depth: { nearY: 650, farY: 390, min: 0.9, max: 1.08 },
+  },
+  2: {
+    bounds: { left: 110, right: 690, top: 492, bottom: 650 },
+    pickupBounds: { left: 115, right: 655, top: 508, bottom: 635 },
+    playerStart: { x: 260, y: 572 },
+    depth: { nearY: 650, farY: 492, min: 0.82, max: 1.08 },
+  },
+  3: {
+    bounds: { left: 118, right: 710, top: 540, bottom: 650 },
+    pickupBounds: { left: 125, right: 675, top: 548, bottom: 635 },
+    playerStart: { x: 270, y: 590 },
+    depth: { nearY: 650, farY: 540, min: 0.78, max: 1.08 },
+  },
+};
 const USE_CONCEPT_PLAYER_SPRITE = true;
 const CONCEPT_PLAYER_TEXTURE = "playerMageWalk";
 const CONCEPT_PLAYER_IDLE_TEXTURE = "playerMageIdleStable";
@@ -89,7 +109,10 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     this.section = this.startSection;
+    this.layout = getSectionLayout(this.section);
     this.player = createPlayer();
+    this.player.x = this.layout.playerStart.x;
+    this.player.y = this.layout.playerStart.y;
     this.spells = createSpellState();
     this.waves = createWaveSystem(this.section);
     this.enemies = [];
@@ -124,7 +147,7 @@ export class GameScene extends Phaser.Scene {
     this.playerLayer = this.add.graphics().setDepth(29);
     this.mageTextureKey = USE_CONCEPT_PLAYER_SPRITE ? CONCEPT_PLAYER_IDLE_TEXTURE : "mage";
     this.mage = this.add.sprite(this.player.x, this.player.y - 42, this.mageTextureKey).setDepth(30);
-    applyPlayerSpritePose(this.mage, this.player, this.mageTextureKey);
+    applyPlayerSpritePose(this.mage, this.player, this.mageTextureKey, this.layout.depth);
     this.enemySprites = new Map();
     this.hud = createHud(this);
     this.addFloatText(`Fokus: ${this.runFocusLabel}`, 640, 164, "#f3d69d");
@@ -221,7 +244,7 @@ export class GameScene extends Phaser.Scene {
     if (this.pausedForCard || this.pausedForMenu || this.pausedForSection || this.gameOver) return;
 
     this.readInput();
-    updatePlayer(this.player, this.inputState, dt, BOUNDS);
+    updatePlayer(this.player, this.inputState, dt, this.layout.bounds);
     this.updateMouseAim();
     updateSpellCooldowns(this.spells, dt);
     this.staffAttackAnimTimer = Math.max(0, this.staffAttackAnimTimer - dt);
@@ -233,6 +256,7 @@ export class GameScene extends Phaser.Scene {
       return enemy;
     });
     updateEnemies(this.enemies, this.player, dt, (amount) => this.hitPlayer(amount));
+    this.constrainActiveEnemies();
 
     this.handleActions();
     this.cleanupDeadEnemies();
@@ -243,6 +267,14 @@ export class GameScene extends Phaser.Scene {
     this.renderActors();
     this.checkCards();
     this.drawUi();
+  }
+
+  constrainActiveEnemies() {
+    const bounds = this.layout.bounds;
+    for (const enemy of this.enemies) {
+      enemy.y = Phaser.Math.Clamp(enemy.y, bounds.top, bounds.bottom);
+      enemy.x = Phaser.Math.Clamp(enemy.x, 42, bounds.right + 250);
+    }
   }
 
   readInput() {
@@ -309,8 +341,8 @@ export class GameScene extends Phaser.Scene {
     const dy = y - this.player.y;
     this.usingMouseAim = Math.hypot(dx, dy) > 34;
     if (!this.usingMouseAim) return;
-    this.aimPoint.x = Phaser.Math.Clamp(x, BOUNDS.left, BOUNDS.right + 190);
-    this.aimPoint.y = Phaser.Math.Clamp(y, BOUNDS.top - 80, BOUNDS.bottom + 40);
+    this.aimPoint.x = Phaser.Math.Clamp(x, this.layout.bounds.left, this.layout.bounds.right + 190);
+    this.aimPoint.y = Phaser.Math.Clamp(y, this.layout.bounds.top - 80, this.layout.bounds.bottom + 40);
     if (Math.abs(dx) > 18) this.player.facing = Math.sign(dx);
   }
 
@@ -412,7 +444,7 @@ export class GameScene extends Phaser.Scene {
     const chance = enemy.isBoss ? 1 : enemy.type === "ogre" ? 0.38 : enemy.type === "ghoul" ? 0.08 : enemy.type === "zombie" ? 0.07 : 0.045;
     if (Math.random() > chance) return;
     const healPct = enemy.isBoss ? 0.28 : enemy.type === "ogre" ? 0.23 : 0.17 + Math.random() * 0.05;
-    const position = getReachablePickupPosition(enemy.x, enemy.y, this.player);
+    const position = getReachablePickupPosition(enemy.x, enemy.y, this.player, this.layout.pickupBounds);
     this.pickups.push({
       kind: "health",
       x: position.x,
@@ -502,8 +534,8 @@ export class GameScene extends Phaser.Scene {
     this.activeInfoLayer.clear();
     this.pickupLayer.clear();
     drawGround(this.ground, this.section);
-    drawZoneGuides(this.ground, this.debugView);
-    drawPickups(this.pickupLayer, this.pickups, this.debugView);
+    drawZoneGuides(this.ground, this.debugView, this.layout);
+    drawPickups(this.pickupLayer, this.pickups, this.debugView, this.layout);
 
     for (const item of this.waves.preview) {
       const progress = Phaser.Math.Clamp(1 - item.depth / 680, 0, 1);
@@ -535,7 +567,8 @@ export class GameScene extends Phaser.Scene {
     updatePlayerSpriteAnimation(this, this.mage, this.inputState, this.mageTextureKey, this.player, this.restartStaffAttackAnim, this.staffAttackAnimTimer, this.castAnimTimer, this.restartCastAnim);
     this.restartStaffAttackAnim = false;
     this.restartCastAnim = false;
-    applyPlayerSpritePose(this.mage, this.player, this.mage.texture.key);
+    applyPlayerSpritePose(this.mage, this.player, this.mage.texture.key, this.layout.depth);
+    this.mage.setDepth(20 + this.player.y * 0.02);
     this.mage.setFlipX(this.player.facing < 0);
     this.mage.setAlpha(this.player.invulnerable > 0 ? 0.65 : 1);
 
@@ -552,7 +585,7 @@ export class GameScene extends Phaser.Scene {
       }
       const recoilLift = enemy.recoil > 0 ? Math.sin(enemy.recoil * 55) * 5 : 0;
       const usesConceptSprite = isConceptEnemyTexture(textureKey);
-      applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, recoilLift);
+      applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, recoilLift, this.layout.depth);
       sprite.setDepth(20 + enemy.y * 0.02);
       sprite.setTint(getEnemyTint(enemy));
       sprite.setAlpha(1);
@@ -1046,12 +1079,13 @@ export class GameScene extends Phaser.Scene {
     this.pressedKeys.clear();
     this.heldKeys.clear();
     this.section = sectionId;
+    this.layout = getSectionLayout(this.section);
     this.pausedForSection = false;
     this.victory = false;
     this.waves = createWaveSystem(sectionId);
     this.nextCardAt = 45;
-    this.player.x = 270;
-    this.player.y = 520;
+    this.player.x = this.layout.playerStart.x;
+    this.player.y = this.layout.playerStart.y;
     this.player.hp = Math.min(this.player.maxHp, Math.max(this.player.hp, Math.floor(this.player.maxHp * 0.55)) + 28);
     this.player.mana = Math.min(this.player.maxMana, Math.max(this.player.mana, Math.floor(this.player.maxMana * 0.45)) + 18);
     this.player.invulnerable = 0.8;
@@ -1536,7 +1570,7 @@ function drawGroundEmbers(g, isChapel) {
   }
 }
 
-function drawZoneGuides(g, debugView) {
+function drawZoneGuides(g, debugView, layout = SECTION_LAYOUTS[1]) {
   g.fillStyle(0x070708, 0.28);
   g.fillRect(950, 320, 330, 290);
   g.fillStyle(0x4d3823, 0.15);
@@ -1546,17 +1580,17 @@ function drawZoneGuides(g, debugView) {
   g.lineBetween(950, 310, 950, 660);
   if (!debugView) return;
   g.lineStyle(2, 0x35a4ff, 0.7);
-  g.strokeRect(BOUNDS.left, BOUNDS.top, BOUNDS.right - BOUNDS.left, BOUNDS.bottom - BOUNDS.top);
+  g.strokeRect(layout.bounds.left, layout.bounds.top, layout.bounds.right - layout.bounds.left, layout.bounds.bottom - layout.bounds.top);
   g.lineStyle(2, 0xd0a455, 0.7);
   g.strokeRect(785, 360, 165, 275);
   g.lineStyle(2, 0x77736c, 0.7);
   g.strokeRect(950, 320, 330, 290);
 }
 
-function drawPickups(g, pickups, debugView) {
+function drawPickups(g, pickups, debugView, layout = SECTION_LAYOUTS[1]) {
   if (debugView) {
     g.lineStyle(2, 0x83f0a4, 0.55);
-    g.strokeRect(PICKUP_BOUNDS.left, PICKUP_BOUNDS.top, PICKUP_BOUNDS.right - PICKUP_BOUNDS.left, PICKUP_BOUNDS.bottom - PICKUP_BOUNDS.top);
+    g.strokeRect(layout.pickupBounds.left, layout.pickupBounds.top, layout.pickupBounds.right - layout.pickupBounds.left, layout.pickupBounds.bottom - layout.pickupBounds.top);
   }
   for (const pickup of pickups) {
     const life = Math.max(0, pickup.ttl / pickup.maxTtl);
@@ -1605,7 +1639,7 @@ function drawPreviewSilhouette(g, type, x, y, scale, alpha, zone) {
 
 function drawFlankWarning(g, flank) {
   const p = 1 - flank.timer / flank.maxTimer;
-  const x = 116 + Math.sin(flank.wobble * 5) * 4;
+  const x = (flank.x ?? 116) + Math.sin(flank.wobble * 5) * 4;
   g.fillStyle(0x2a1013, 0.32 + p * 0.2);
   g.fillEllipse(x, flank.y, 92 + p * 18, 46 + p * 8);
   g.lineStyle(3, 0xd05a47, 0.42 + p * 0.42);
@@ -1770,10 +1804,11 @@ function updatePlayerSpriteAnimation(scene, sprite, inputState, textureKey, play
   sprite.anims.play(CONCEPT_PLAYER_IDLE_ANIM, true);
 }
 
-function applyPlayerSpritePose(sprite, player, textureKey) {
+function applyPlayerSpritePose(sprite, player, textureKey, depthConfig = SECTION_LAYOUTS[1].depth) {
+  const depthScale = getDepthScale(player.y, depthConfig);
   if (textureKey !== CONCEPT_PLAYER_TEXTURE && textureKey !== CONCEPT_PLAYER_IDLE_TEXTURE && textureKey !== CONCEPT_PLAYER_STAFF_TEXTURE && textureKey !== CONCEPT_PLAYER_CAST_TEXTURE) {
     sprite.setOrigin(0.5, 0.5);
-    sprite.setScale(1.08);
+    sprite.setScale(1.08 * depthScale);
     sprite.setPosition(player.x, player.y - 44);
     return;
   }
@@ -1782,7 +1817,7 @@ function applyPlayerSpritePose(sprite, player, textureKey) {
   const scaleMultiplier = CONCEPT_PLAYER_SCALE_MULTIPLIERS[textureKey] ?? 1;
   const scale = source?.height ? (CONCEPT_PLAYER_HEIGHT / source.height) * scaleMultiplier : scaleMultiplier;
   sprite.setOrigin(0.5, 1);
-  sprite.setScale(scale);
+  sprite.setScale(scale * depthScale);
   sprite.setPosition(player.x, player.y + 25);
 }
 
@@ -1810,10 +1845,11 @@ function isConceptEnemyTexture(textureKey) {
   return Object.values(CONCEPT_ENEMY_TEXTURES).includes(textureKey);
 }
 
-function applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, recoilLift) {
+function applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, recoilLift, depthConfig = SECTION_LAYOUTS[1].depth) {
+  const depthScale = getDepthScale(enemy.y, depthConfig);
   if (!usesConceptSprite) {
     sprite.setOrigin(0.5, 0.5);
-    sprite.setScale(enemy.isBoss ? 1.28 : 1);
+    sprite.setScale((enemy.isBoss ? 1.28 : 1) * depthScale);
     sprite.setPosition(enemy.x, enemy.y - enemy.radius * 0.7 - recoilLift);
     sprite.setFlipX(false);
     return;
@@ -1824,7 +1860,7 @@ function applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, reco
   const targetHeight = baseHeight * (enemy.isBoss ? 1.22 : 1);
   const scale = source?.height ? targetHeight / source.height : 1;
   sprite.setOrigin(0.5, 1);
-  sprite.setScale(scale);
+  sprite.setScale(scale * depthScale);
   sprite.setPosition(enemy.x, enemy.y + enemy.radius * 0.35 - recoilLift);
   sprite.setFlipX(enemy.spawnPoint === "leftFlank");
 }
@@ -2122,21 +2158,30 @@ function getGoldValue(enemy) {
   return 3;
 }
 
-function getReachablePickupPosition(x, y, player) {
-  const wasBeyondRight = x > PICKUP_BOUNDS.right;
-  let orbX = wasBeyondRight ? PICKUP_BOUNDS.right - 70 : clamp(x, PICKUP_BOUNDS.left, PICKUP_BOUNDS.right);
-  let orbY = clamp(y, PICKUP_BOUNDS.top, PICKUP_BOUNDS.bottom);
+function getReachablePickupPosition(x, y, player, pickupBounds = PICKUP_BOUNDS) {
+  const wasBeyondRight = x > pickupBounds.right;
+  let orbX = wasBeyondRight ? pickupBounds.right - 70 : clamp(x, pickupBounds.left, pickupBounds.right);
+  let orbY = clamp(y, pickupBounds.top, pickupBounds.bottom);
   let moved = wasBeyondRight || x !== orbX || y !== orbY;
 
   if (distance({ x: orbX, y: orbY }, player) < PICKUP_MIN_PLAYER_DISTANCE) {
     const preferredX = player.x > 520 ? player.x - PICKUP_MIN_PLAYER_DISTANCE : player.x + PICKUP_MIN_PLAYER_DISTANCE;
-    const verticalNudge = player.y > (PICKUP_BOUNDS.top + PICKUP_BOUNDS.bottom) / 2 ? -72 : 72;
-    orbX = clamp(preferredX, PICKUP_BOUNDS.left, PICKUP_BOUNDS.right - 40);
-    orbY = clamp(player.y + verticalNudge, PICKUP_BOUNDS.top, PICKUP_BOUNDS.bottom);
+    const verticalNudge = player.y > (pickupBounds.top + pickupBounds.bottom) / 2 ? -72 : 72;
+    orbX = clamp(preferredX, pickupBounds.left, pickupBounds.right - 40);
+    orbY = clamp(player.y + verticalNudge, pickupBounds.top, pickupBounds.bottom);
     moved = true;
   }
 
   return { x: orbX, y: orbY, moved };
+}
+
+function getSectionLayout(section) {
+  return SECTION_LAYOUTS[section] ?? SECTION_LAYOUTS[1];
+}
+
+function getDepthScale(y, depthConfig = SECTION_LAYOUTS[1].depth) {
+  const t = Phaser.Math.Clamp((y - depthConfig.farY) / (depthConfig.nearY - depthConfig.farY || 1), 0, 1);
+  return Phaser.Math.Linear(depthConfig.min, depthConfig.max, t);
 }
 
 function clamp(value, min, max) {
