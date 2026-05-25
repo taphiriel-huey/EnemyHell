@@ -1617,8 +1617,9 @@ function drawAimGuide(g, player, aimPoint, enabled, now) {
   const ny = dy / len;
   const startX = player.x + nx * 38;
   const startY = player.y - 34 + ny * 24;
-  const endX = player.x + nx * Math.min(len, 190);
-  const endY = player.y - 34 + ny * Math.min(len, 190) * 0.72;
+  const guideLen = Math.min(len, 310);
+  const endX = player.x + nx * guideLen;
+  const endY = player.y - 34 + ny * guideLen;
   const pulse = 0.5 + Math.sin(now * 0.009) * 0.5;
   g.lineStyle(2, 0x9edfff, 0.18 + pulse * 0.08);
   g.lineBetween(startX, startY, endX, endY);
