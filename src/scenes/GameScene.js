@@ -40,7 +40,7 @@ const SPELL_RELEASE_DELAYS = {
   frost: 0.28,
 };
 const LIGHTNING_IMPACT_ANIM = "lightning-impact-fx";
-const LIGHTNING_IMPACT_FRAMES = [0, 1, 2, 3, 4];
+const LIGHTNING_IMPACT_FRAMES = Array.from({ length: 8 }, (_, frame) => frame);
 const FROST_AREA_ANIM = "frost-area-fx";
 const FROST_AREA_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
 const USE_CONCEPT_ENEMY_SPRITES = true;

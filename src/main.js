@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=spell-signatures-2";
-import { MenuScene } from "./scenes/MenuScene.js?v=spell-signatures-2";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=spell-signatures-2";
-import { GameScene } from "./scenes/GameScene.js?v=spell-signatures-2";
+import { BootScene } from "./scenes/BootScene.js?v=lightning-impact-2";
+import { MenuScene } from "./scenes/MenuScene.js?v=lightning-impact-2";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=lightning-impact-2";
+import { GameScene } from "./scenes/GameScene.js?v=lightning-impact-2";
 
 const config = {
   type: Phaser.AUTO,
