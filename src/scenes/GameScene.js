@@ -110,6 +110,8 @@ export class GameScene extends Phaser.Scene {
     this.staffAttackAnimTimer = 0;
     this.castAnimTimer = 0;
     this.pendingSpellReleases = [];
+    this.aimPoint = { x: this.player.x + 240, y: this.player.y };
+    this.usingMouseAim = false;
     this.restartCastAnim = false;
     this.runFocusLabel = applyStartFocus(this.startFocus, this.player, this.spells);
 
@@ -198,6 +200,7 @@ export class GameScene extends Phaser.Scene {
 
     this.readInput();
     updatePlayer(this.player, this.inputState, dt, BOUNDS);
+    this.updateMouseAim();
     updateSpellCooldowns(this.spells, dt);
     this.staffAttackAnimTimer = Math.max(0, this.staffAttackAnimTimer - dt);
     this.castAnimTimer = Math.max(0, this.castAnimTimer - dt);
@@ -231,6 +234,7 @@ export class GameScene extends Phaser.Scene {
 
   handleActions() {
     if ((this.consumePressed("j") || this.consumePressed("mouseleft")) && canMelee(this.player)) {
+      this.faceAim();
       const attack = performMelee(this.player);
       this.staffAttackAnimTimer = CONCEPT_PLAYER_STAFF_VISUAL_DURATION;
       this.restartStaffAttackAnim = true;
@@ -267,9 +271,36 @@ export class GameScene extends Phaser.Scene {
       this.effects.push({ kind: "staff", ...attack, hit: hits > 0, t: attack.attackDuration, max: attack.attackDuration });
     }
 
-    if (this.consumePressed("1") || this.consumePressed("mouseright")) this.consumeSpell(castFireball(this.player, this.enemies, this.spells));
-    if (this.consumePressed("2") || this.consumePressed("q")) this.consumeSpell(castLightning(this.player, this.enemies, this.spells));
-    if (this.consumePressed("3") || this.consumePressed("e")) this.consumeSpell(castFrost(this.player, this.enemies, this.spells));
+    if (this.consumePressed("1") || this.consumePressed("mouseright")) this.consumeSpell(castFireball(this.player, this.enemies, this.spells, this.getAimPoint()));
+    if (this.consumePressed("2") || this.consumePressed("q")) this.consumeSpell(castLightning(this.player, this.enemies, this.spells, this.getAimPoint()));
+    if (this.consumePressed("3") || this.consumePressed("e")) this.consumeSpell(castFrost(this.player, this.enemies, this.spells, this.getAimPoint()));
+  }
+
+  updateMouseAim() {
+    const pointer = this.input.activePointer;
+    if (!pointer) return;
+    const x = pointer.worldX ?? pointer.x;
+    const y = pointer.worldY ?? pointer.y;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    if (x < 0 || x > this.scale.width || y < 0 || y > this.scale.height) return;
+    const dx = x - this.player.x;
+    const dy = y - this.player.y;
+    this.usingMouseAim = Math.hypot(dx, dy) > 34;
+    if (!this.usingMouseAim) return;
+    this.aimPoint.x = Phaser.Math.Clamp(x, BOUNDS.left, BOUNDS.right + 190);
+    this.aimPoint.y = Phaser.Math.Clamp(y, BOUNDS.top - 80, BOUNDS.bottom + 40);
+    if (Math.abs(dx) > 18) this.player.facing = Math.sign(dx);
+  }
+
+  getAimPoint() {
+    this.faceAim();
+    return this.usingMouseAim ? this.aimPoint : null;
+  }
+
+  faceAim() {
+    if (!this.usingMouseAim) return;
+    const dx = this.aimPoint.x - this.player.x;
+    if (Math.abs(dx) > 18) this.player.facing = Math.sign(dx);
   }
 
   consumePressed(key) {
@@ -477,6 +508,7 @@ export class GameScene extends Phaser.Scene {
 
   renderActors() {
     this.playerLayer.clear();
+    drawAimGuide(this.playerLayer, this.player, this.aimPoint, this.usingMouseAim, this.time.now);
     drawPlayerReadability(this.playerLayer, this.player, this.time.now);
     updatePlayerSpriteAnimation(this, this.mage, this.inputState, this.mageTextureKey, this.player, this.restartStaffAttackAnim, this.staffAttackAnimTimer, this.castAnimTimer, this.restartCastAnim);
     this.restartStaffAttackAnim = false;
@@ -1573,6 +1605,27 @@ function drawPlayerReadability(g, player, now) {
     g.fillStyle(i === 1 ? 0xf5d89a : 0x9edfff, 0.55);
     g.fillCircle(mx, my, i === 1 ? 1.5 : 2);
   }
+}
+
+function drawAimGuide(g, player, aimPoint, enabled, now) {
+  if (!enabled || !aimPoint) return;
+  const dx = aimPoint.x - player.x;
+  const dy = aimPoint.y - player.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 36) return;
+  const nx = dx / len;
+  const ny = dy / len;
+  const startX = player.x + nx * 38;
+  const startY = player.y - 34 + ny * 24;
+  const endX = player.x + nx * Math.min(len, 190);
+  const endY = player.y - 34 + ny * Math.min(len, 190) * 0.72;
+  const pulse = 0.5 + Math.sin(now * 0.009) * 0.5;
+  g.lineStyle(2, 0x9edfff, 0.18 + pulse * 0.08);
+  g.lineBetween(startX, startY, endX, endY);
+  g.lineStyle(1, 0xf5d89a, 0.28);
+  g.strokeCircle(endX, endY, 9 + pulse * 2);
+  g.fillStyle(0x9edfff, 0.18 + pulse * 0.08);
+  g.fillCircle(endX, endY, 3);
 }
 
 function createPlayerAnimations(scene) {

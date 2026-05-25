@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=music-test-2";
-import { MenuScene } from "./scenes/MenuScene.js?v=music-test-2";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=music-test-2";
-import { GameScene } from "./scenes/GameScene.js?v=music-test-2";
+import { BootScene } from "./scenes/BootScene.js?v=mouse-aim-2";
+import { MenuScene } from "./scenes/MenuScene.js?v=mouse-aim-2";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=mouse-aim-2";
+import { GameScene } from "./scenes/GameScene.js?v=mouse-aim-2";
 
 const config = {
   type: Phaser.AUTO,

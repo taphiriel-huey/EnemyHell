@@ -96,7 +96,7 @@ export function reduceLastSpellCooldown(spells, amount) {
   if (spell.currentCooldown <= 0) spell.readyPulse = 0.25;
 }
 
-export function castFireball(player, enemies, spells) {
+export function castFireball(player, enemies, spells, aim = null) {
   const fire = spells.spells.fire;
   let damage = 142 * spells.fireDamageMultiplier;
   let radius = 144 * spells.fireSize;
@@ -128,19 +128,27 @@ export function castFireball(player, enemies, spells) {
   fire.heldReadyTime = 0;
   spells.nextFireOverload = false;
   recordCast(spells, "fire");
-  const impact = { x: player.x + player.facing * 245, y: player.y, radius, damage, knockback };
+  const aimVector = getAimVector(player, aim);
+  const impact = {
+    x: player.x + aimVector.x * 245,
+    y: player.y + aimVector.y * 165,
+    radius,
+    damage,
+    knockback,
+  };
   const killed = applyAreaDamage(enemies, impact.x, impact.y, radius, damage, knockback, player.x, player.y, spells);
-  return { kind: "fire", impact, killed, empowered: rhythm > 0 || savedBonus > 0 };
+  return { kind: "fire", impact, aim: aimVector, killed, empowered: rhythm > 0 || savedBonus > 0 };
 }
 
-export function castLightning(player, enemies, spells) {
+export function castLightning(player, enemies, spells, aim = null) {
   const lightning = spells.spells.lightning;
   if (!lightning.cast(player, spells.nextSpellCostMultiplier)) return null;
   spells.nextSpellCostMultiplier = 1;
 
   const rhythm = consumeRhythmBonus(spells);
   recordCast(spells, "lightning");
-  const start = { x: player.x + player.facing * 90, y: player.y };
+  const aimVector = getAimVector(player, aim);
+  const start = { x: player.x + aimVector.x * 90, y: player.y + aimVector.y * 62 };
   const hasBurningTarget = enemies.some((enemy) => enemy.hp > 0 && enemy.burn > 0 && distance(start, enemy) < 500);
   const bonusTargets = hasBurningTarget ? spells.traits.conductiveAshExtraTargets : 0;
   const range = spells.lightningRange + (hasBurningTarget ? 80 : 0);
@@ -159,7 +167,7 @@ export function castLightning(player, enemies, spells) {
   if (spells.traits.lightningRefundPerHit > 0 && targets.length > 0) {
     lightning.currentCooldown = Math.max(0, lightning.currentCooldown - targets.length * spells.traits.lightningRefundPerHit);
   }
-  return { kind: "lightning", start, targets, splashCount: splashes.length, killed, empowered: rhythm > 0 || hasBurningTarget };
+  return { kind: "lightning", start, aim: aimVector, targets, splashCount: splashes.length, killed, empowered: rhythm > 0 || hasBurningTarget };
 }
 
 function lightningPriority(start, enemy) {
@@ -183,14 +191,15 @@ function applyLightningSplash(enemies, targets, rhythm, splashMultiplier = 1) {
   return killed;
 }
 
-export function castFrost(player, enemies, spells) {
+export function castFrost(player, enemies, spells, aim = null) {
   const frost = spells.spells.frost;
   if (!frost.cast(player, spells.nextSpellCostMultiplier)) return null;
   spells.nextSpellCostMultiplier = 1;
 
   const rhythm = consumeRhythmBonus(spells);
   recordCast(spells, "frost");
-  const cone = { x: player.x + player.facing * 120, y: player.y, radius: spells.frostRadius };
+  const aimVector = getAimVector(player, aim);
+  const cone = { x: player.x + aimVector.x * 132, y: player.y + aimVector.y * 92, radius: spells.frostRadius, aim: aimVector };
   const killed = [];
   let hitCount = 0;
   for (const enemy of enemies) {
@@ -256,4 +265,16 @@ function consumeRhythmBonus(spells) {
   if (!spells.rhythmEmpowered) return 0;
   spells.rhythmEmpowered = false;
   return spells.traits.rhythmBonus;
+}
+
+function getAimVector(player, aim) {
+  if (!aim) return { x: player.facing || 1, y: 0 };
+  const dx = aim.x - player.x;
+  const dy = (aim.y - player.y) * 0.72;
+  const len = Math.hypot(dx, dy);
+  if (len < 18) return { x: player.facing || 1, y: 0 };
+  return {
+    x: dx / len,
+    y: Phaser.Math.Clamp(dy / len, -0.7, 0.7),
+  };
 }

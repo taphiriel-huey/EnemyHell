@@ -5,7 +5,7 @@ const MUSIC_URL = "assets/audio/EH_Metal1.mp4";
 
 export function ensureBlackhavenMusic(scene) {
   let music = scene.registry.get(MUSIC_REGISTRY_KEY);
-  if (!music) {
+  if (!music && scene.cache?.audio?.exists?.(MUSIC_KEY)) {
     try {
       music = scene.sound.add(MUSIC_KEY, {
         loop: true,
