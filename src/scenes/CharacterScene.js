@@ -11,6 +11,25 @@ const STAT_ROWS = [
   ["Frost", "30 Mana / 5.0s", "Zeit kaufen, Gegner vorbereiten."],
 ];
 
+const QUICK_STATS = [
+  ["HP", "160"],
+  ["Mana", "100"],
+  ["Tempo", "235"],
+  ["Stab", "4er Combo"],
+];
+
+const SECTION_NAMES = {
+  1: "Dorfplatz",
+  2: "Kapellentor",
+  3: "Blutmondhain",
+};
+
+const SECTION_BACKDROPS = {
+  1: "blackhavenBackgroundConcept",
+  2: "blackhavenChurchyardConcept",
+  3: "blackhavenForestConcept",
+};
+
 const EQUIPMENT_SLOTS = [
   ["Stab", "Aschestab", "+ Mana durch Treffer"],
   ["Robe", "Schwarze Robe", "+ klare Silhouette"],
@@ -93,63 +112,66 @@ export class CharacterScene extends Phaser.Scene {
   }
 
   drawBackdrop(width, height) {
+    const base = this.add.graphics();
+    base.fillStyle(0x070607, 1);
+    base.fillRect(0, 0, width, height);
+
+    const backdropKey = SECTION_BACKDROPS[this.startSectionId] ?? SECTION_BACKDROPS[1];
+    if (this.textures.exists(backdropKey)) {
+      const image = this.add.image(width * 0.5, height * 0.5, backdropKey);
+      fitImageCover(image, width, height);
+      image.setAlpha(0.34);
+    }
+
     const g = this.add.graphics();
-    g.fillGradientStyle(0x09080b, 0x120d12, 0x211114, 0x070607, 1);
+    g.fillGradientStyle(0x040304, 0x040304, 0x090608, 0x090608, 0.88, 0.2, 0.18, 0.9);
     g.fillRect(0, 0, width, height);
-    g.fillStyle(0x5d1711, 0.34);
-    g.fillCircle(980, 270, 220);
-    g.fillStyle(0x0a090a, 0.92);
-    for (let i = 0; i < 9; i += 1) {
-      const x = 60 + i * 145;
-      const roofY = 505 + (i % 3) * 18;
-      g.fillRect(x, roofY, 58, 120);
-      g.fillTriangle(x - 16, roofY, x + 29, roofY - 56, x + 74, roofY);
-    }
-    g.fillStyle(0x7c3618, 0.45);
-    for (let i = 0; i < 7; i += 1) {
-      const x = 170 + i * 155;
-      g.fillTriangle(x, 640, x + 28, 520 - (i % 2) * 45, x + 58, 640);
-    }
-    g.lineStyle(1, 0xb88a46, 0.24);
-    g.beginPath();
-    g.moveTo(100, 656);
-    g.lineTo(1180, 612);
-    g.strokePath();
+    g.fillGradientStyle(0x050405, 0x050405, 0x050405, 0x050405, 0.0, 0.2, 0.82, 0.94);
+    g.fillRect(0, height * 0.42, width, height * 0.58);
+    g.fillStyle(0x140c0d, 0.52);
+    g.fillRect(0, 0, 410, height);
+    g.fillStyle(0x030203, 0.5);
+    g.fillRect(910, 0, 370, height);
+    g.lineStyle(1, 0xc29151, 0.25);
+    g.lineBetween(55, 108, 1225, 92);
+    g.lineBetween(70, 650, 1210, 610);
   }
 
   drawHeader() {
-    this.add.text(640, 38, "MAGIER VON BLACKHAVEN", font(34, "#f2dec0")).setOrigin(0.5, 0);
-    this.add.text(640, 82, "Run-Vorbereitung", font(16, "#c99f63")).setOrigin(0.5, 0);
-    this.add.text(640, 108, `Start: Abschnitt ${this.startSectionId}`, {
+    this.add.text(78, 42, "MAGIER VON BLACKHAVEN", font(32, "#f2dec0")).setOrigin(0, 0);
+    this.add.text(80, 84, `Run-Vorbereitung  |  ${SECTION_NAMES[this.startSectionId] ?? "Abschnitt"}`, font(15, "#c99f63")).setOrigin(0, 0);
+    this.add.text(910, 46, "Startfokus waehlen", font(18, "#f2dec0")).setOrigin(0, 0);
+    this.add.text(910, 75, "Kleine Run-Neigung, keine neue Mechanik.", {
       ...font(13, "#a99b82"),
       fontFamily: "Arial, sans-serif",
-    }).setOrigin(0.5, 0);
+    }).setOrigin(0, 0);
   }
 
   drawMagePanel() {
     const g = this.add.graphics();
-    panel(g, 60, 128, 335, 456);
-    this.add.text(92, 160, "Kampfprofil", font(22, "#f4dfbd"));
-    this.add.text(92, 195, "Arkaner Duellant", font(16, "#cdb896"));
+    g.fillStyle(0x060507, 0.58);
+    g.fillEllipse(354, 580, 420, 92);
+    g.lineStyle(2, 0x6ca8c9, 0.26);
+    g.strokeEllipse(350, 422, 258, 366);
+    g.lineStyle(1, 0xc29151, 0.32);
+    g.strokeEllipse(350, 582, 360, 74);
 
-    const silhouette = this.add.graphics();
-    silhouette.fillStyle(0x08080b, 1);
-    silhouette.fillEllipse(230, 310, 58, 72);
-    silhouette.fillStyle(0x111018, 1);
-    silhouette.fillRoundedRect(196, 348, 68, 118, 16);
-    silhouette.fillStyle(0x09090d, 1);
-    silhouette.fillTriangle(182, 350, 150, 505, 225, 488);
-    silhouette.fillTriangle(264, 350, 316, 505, 235, 488);
-    silhouette.lineStyle(4, 0xb98f55, 0.85);
-    silhouette.beginPath();
-    silhouette.moveTo(282, 340);
-    silhouette.lineTo(318, 505);
-    silhouette.strokePath();
-    silhouette.lineStyle(5, 0x4da3ff, 0.32);
-    silhouette.strokeCircle(230, 386, 86);
+    if (this.textures.exists("playerMageCast")) {
+      const mage = this.add.sprite(352, 570, "playerMageCast", 0).setOrigin(0.5, 1);
+      mage.setScale(1.42);
+      mage.setAlpha(0.96);
+    } else if (this.textures.exists("playerMageConcept")) {
+      const mage = this.add.image(352, 570, "playerMageConcept").setOrigin(0.5, 1);
+      mage.setDisplaySize(250, 390);
+    }
 
-    chip(this, 92, 502, "Chronik");
-    this.drawRunMemory(92, 532);
+    this.add.text(78, 525, "Arkaner Duellant", font(22, "#f4dfbd"));
+    this.add.text(78, 557, "Magie als Kampfkunst. Kontrolle, Rhythmus, Dominanz.", {
+      ...font(13, "#bfa985"),
+      fontFamily: "Arial, sans-serif",
+      wordWrap: { width: 330 },
+    });
+    this.drawRunMemory(78, 606);
   }
 
   drawRunMemory(x, y) {
@@ -172,18 +194,31 @@ export class CharacterScene extends Phaser.Scene {
 
   drawStatsPanel() {
     const g = this.add.graphics();
-    panel(g, 430, 128, 370, 456);
-    this.add.text(462, 160, "Werte", font(22, "#f4dfbd"));
-    this.add.text(462, 195, "Aktueller Prototyp-Stand", font(14, "#bfa985"));
+    panel(g, 470, 128, 385, 424);
+    this.add.text(502, 160, "Kampfwerte", font(22, "#f4dfbd"));
+    this.add.text(502, 190, "Aktueller Prototyp-Stand", font(13, "#bfa985"));
 
-    STAT_ROWS.forEach(([label, value, note], index) => {
-      const y = 230 + index * 45;
-      g.fillStyle(index % 2 === 0 ? 0x151116 : 0x0d0c10, 0.72);
-      g.fillRoundedRect(456, y - 8, 312, 36, 3);
-      this.add.text(470, y, label, font(14, "#dec69d"));
-      this.add.text(760, y, value, font(14, "#f1dfbe")).setOrigin(1, 0);
-      this.add.text(470, y + 17, note, {
-        ...font(11, "#8f846f"),
+    QUICK_STATS.forEach(([label, value], index) => {
+      const x = 502 + index * 84;
+      g.fillStyle(0x171116, 0.82);
+      g.lineStyle(1, 0x6f5638, 0.75);
+      g.fillRoundedRect(x, 226, 70, 62, 4);
+      g.strokeRoundedRect(x, 226, 70, 62, 4);
+      this.add.text(x + 35, 236, value, font(15, "#f1dfbe")).setOrigin(0.5, 0);
+      this.add.text(x + 35, 264, label, {
+        ...font(10, "#a99b82"),
+        fontFamily: "Arial, sans-serif",
+      }).setOrigin(0.5, 0);
+    });
+
+    STAT_ROWS.slice(3).forEach(([label, value, note], index) => {
+      const y = 326 + index * 45;
+      g.fillStyle(0x0d0c10, 0.58);
+      g.fillRoundedRect(502, y - 8, 310, 34, 3);
+      this.add.text(516, y, label, font(13, "#dec69d"));
+      this.add.text(802, y, value, font(13, "#f1dfbe")).setOrigin(1, 0);
+      this.add.text(516, y + 17, note, {
+        ...font(10, "#8f846f"),
         fontFamily: "Arial, sans-serif",
       });
     });
@@ -191,67 +226,63 @@ export class CharacterScene extends Phaser.Scene {
 
   drawEquipmentPanel() {
     const g = this.add.graphics();
-    panel(g, 835, 128, 385, 245);
-    this.add.text(867, 160, "Ausruestung", font(22, "#f4dfbd"));
-    this.add.text(867, 195, "Grundsteine fuer spaetere Run-Progression", font(13, "#bfa985"));
+    panel(g, 470, 572, 385, 88);
+    this.add.text(502, 594, "Ausruestung", font(16, "#f4dfbd"));
 
     EQUIPMENT_SLOTS.forEach(([slot, item, bonus], index) => {
-      const x = 867 + (index % 2) * 172;
-      const y = 232 + Math.floor(index / 2) * 76;
+      const x = 502 + index * 84;
+      const y = 622;
       g.fillStyle(0x111015, 0.92);
       g.lineStyle(1, 0x6f5638, 0.9);
-      g.fillRoundedRect(x, y, 142, 56, 4);
-      g.strokeRoundedRect(x, y, 142, 56, 4);
-      this.add.text(x + 12, y + 8, slot, font(12, "#caa46c"));
-      this.add.text(x + 12, y + 24, item, {
-        ...font(12, "#f0ddbd"),
+      g.fillRoundedRect(x, y, 70, 24, 3);
+      g.strokeRoundedRect(x, y, 70, 24, 3);
+      this.add.text(x + 35, y + 5, slot, font(11, "#caa46c")).setOrigin(0.5, 0);
+      this.add.text(x + 35, y + 28, item, {
+        ...font(10, "#f0ddbd"),
         fontFamily: "Arial, sans-serif",
-        wordWrap: { width: 118 },
-      });
-      this.add.text(x + 12, y + 40, bonus, {
-        ...font(10, "#8f846f"),
-        fontFamily: "Arial, sans-serif",
-      });
+        wordWrap: { width: 74 },
+        align: "center",
+      }).setOrigin(0.5, 0);
     });
   }
 
   drawFocusPanel() {
     const g = this.add.graphics();
-    panel(g, 835, 400, 385, 184);
-    this.add.text(867, 430, "Startfokus", font(22, "#f4dfbd"));
-    this.add.text(867, 458, "Kleine Run-Neigung, keine neue Mechanik.", {
-      ...font(12, "#a99b82"),
-      fontFamily: "Arial, sans-serif",
-    });
+    panel(g, 900, 122, 310, 430);
     START_FOCI.forEach((focus, index) => {
-      const y = 488 + index * 29;
+      const y = 162 + index * 112;
       const card = this.add.graphics();
       this.focusCards.push(card);
-      this.add.text(882, y + 4, `${index + 1}`, font(11, "#caa46c")).setOrigin(0.5, 0);
-      this.add.text(902, y, focus.title, font(13, "#e5c995"));
-      this.add.text(1002, y, focus.short, {
-        ...font(11, "#a99b82"),
+      this.add.text(928, y + 12, `${index + 1}`, font(14, "#caa46c")).setOrigin(0.5, 0);
+      this.add.text(956, y + 9, focus.title, font(17, "#e5c995"));
+      this.add.text(956, y + 38, focus.short, {
+        ...font(12, "#d0b487"),
         fontFamily: "Arial, sans-serif",
       });
-      const hit = this.add.zone(867, y - 4, 315, 27).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+      this.add.text(956, y + 58, focus.body, {
+        ...font(11, "#918674"),
+        fontFamily: "Arial, sans-serif",
+        wordWrap: { width: 210 },
+      });
+      const hit = this.add.zone(920, y, 260, 92).setOrigin(0, 0).setInteractive({ useHandCursor: true });
       hit.on("pointerdown", () => this.setFocus(index));
     });
     this.drawFocusSelection();
   }
 
   drawFooter() {
-    this.focusDescription = this.add.text(640, 610, "", {
-      ...font(14, "#a99b82"),
+    this.focusDescription = this.add.text(912, 575, "", {
+      ...font(13, "#bfa985"),
       fontFamily: "Arial, sans-serif",
-      wordWrap: { width: 540 },
-      align: "center",
-    }).setOrigin(0.5);
-    this.add.text(640, 642, "1-3 Fokus waehlen    Pfeile/A-D wechseln    Enter/Space: Run starten    Esc: Zurueck", font(14, "#caa46c")).setOrigin(0.5);
+      wordWrap: { width: 290 },
+      align: "left",
+    });
+    this.add.text(640, 690, "1-3 Fokus    Pfeile/A-D wechseln    Enter/Space Start    Esc Zurueck    M Musik", font(13, "#caa46c")).setOrigin(0.5);
     this.drawFocusSelection();
   }
 
   createStartButton() {
-    const button = this.add.container(640, 682);
+    const button = this.add.container(1058, 650);
     const g = this.add.graphics();
     g.fillStyle(0x1b1215, 0.98);
     g.lineStyle(2, 0xd29b55, 1);
@@ -266,15 +297,15 @@ export class CharacterScene extends Phaser.Scene {
   drawFocusSelection() {
     if (!this.focusCards) return;
     this.focusCards.forEach((card, index) => {
-      const y = 484 + index * 29;
+      const y = 162 + index * 112;
       card.clear();
-      card.fillStyle(index === this.selectedFocusIndex ? 0x211820 : 0x151116, index === this.selectedFocusIndex ? 0.96 : 0.58);
+      card.fillStyle(index === this.selectedFocusIndex ? 0x211820 : 0x151116, index === this.selectedFocusIndex ? 0.96 : 0.72);
       card.lineStyle(index === this.selectedFocusIndex ? 2 : 1, index === this.selectedFocusIndex ? 0xffdf9d : 0x6f5638, index === this.selectedFocusIndex ? 1 : 0.65);
-      card.fillRoundedRect(867, y, 315, 27, 3);
-      card.strokeRoundedRect(867, y, 315, 27, 3);
+      card.fillRoundedRect(920, y, 260, 92, 4);
+      card.strokeRoundedRect(920, y, 260, 92, 4);
     });
     if (this.focusDescription) {
-      this.focusDescription.setText(START_FOCI[this.selectedFocusIndex].body);
+      this.focusDescription.setText(`Gewaehlt: ${START_FOCI[this.selectedFocusIndex].title}`);
     }
   }
 }
@@ -301,4 +332,9 @@ function font(size, color) {
     fontSize: `${size}px`,
     color,
   };
+}
+
+function fitImageCover(image, width, height) {
+  const scale = Math.max(width / image.width, height / image.height);
+  image.setScale(scale);
 }

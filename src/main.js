@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=section-layout-3";
-import { MenuScene } from "./scenes/MenuScene.js?v=section-layout-3";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=section-layout-3";
-import { GameScene } from "./scenes/GameScene.js?v=section-layout-3";
+import { BootScene } from "./scenes/BootScene.js?v=prep-screen-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=prep-screen-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=prep-screen-1";
+import { GameScene } from "./scenes/GameScene.js?v=prep-screen-1";
 
 const config = {
   type: Phaser.AUTO,
