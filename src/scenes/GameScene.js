@@ -640,62 +640,66 @@ export class GameScene extends Phaser.Scene {
 
   createFireTrail(sprite) {
     if (!this.textures.exists("fireball")) return null;
-    return this.add.particles(0, 0, "fireball", {
-      follow: sprite,
+    const trail = this.add.particles(0, 0, "fireball", {
       lifespan: { min: 180, max: 340 },
-      speed: { min: 14, max: 54 },
-      scale: { start: 0.22, end: 0 },
-      alpha: { start: 0.65, end: 0 },
-      frequency: 16,
-      quantity: 1,
+      speed: { min: 22, max: 78 },
+      scale: { start: 0.42, end: 0 },
+      alpha: { start: 0.92, end: 0 },
+      frequency: 10,
+      quantity: 2,
       tint: [0xffd16d, 0xff7a2a, 0x7b3b24],
       blendMode: Phaser.BlendModes.ADD,
       emitting: true,
     }).setDepth(61);
+    trail.startFollow(sprite, -18, 0);
+    return trail;
   }
 
   emitFireExplosion(x, y, radius) {
     if (!this.textures.exists("fireball")) return;
+    this.createImpactFlash(x, y, radius * 1.55, 0xff7a24, 0.32, 260, 66);
     const burst = this.add.particles(x, y, "fireball", {
-      lifespan: { min: 320, max: 620 },
-      speed: { min: 105, max: 245 },
+      lifespan: { min: 420, max: 760 },
+      speed: { min: 150, max: 340 },
       angle: { min: 0, max: 360 },
       gravityY: 115,
-      scale: { start: 0.34, end: 0 },
-      alpha: { start: 0.92, end: 0 },
-      quantity: 24,
-      maxParticles: 28,
+      scale: { start: 0.62, end: 0 },
+      alpha: { start: 1, end: 0 },
+      quantity: 34,
+      maxParticles: 40,
       tint: [0xfff0a6, 0xff8a2d, 0x6e4637],
       blendMode: Phaser.BlendModes.ADD,
       emitting: false,
     }).setDepth(64);
-    burst.explode(Phaser.Math.Clamp(Math.round(radius / 7), 18, 28), x, y);
-    this.time.delayedCall(720, () => burst.destroy());
+    burst.explode(Phaser.Math.Clamp(Math.round(radius / 5), 26, 40), x, y);
+    this.time.delayedCall(820, () => burst.destroy());
   }
 
   emitLightningSparks(x, y, count = 10) {
     if (!this.textures.exists("lightning")) return;
+    this.createImpactFlash(x, y, 78, 0x8deaff, 0.28, 150, 67);
     const sparks = this.add.particles(x, y, "lightning", {
-      lifespan: { min: 130, max: 260 },
-      speed: { min: 120, max: 280 },
+      lifespan: { min: 180, max: 330 },
+      speed: { min: 170, max: 360 },
       angle: { min: 0, max: 360 },
-      scale: { start: 0.25, end: 0 },
-      alpha: { start: 0.85, end: 0 },
-      quantity: count,
-      maxParticles: count,
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 1, end: 0 },
+      quantity: count + 8,
+      maxParticles: count + 8,
       tint: [0xffffff, 0x9be7ff, 0x4aa8ff],
       blendMode: Phaser.BlendModes.ADD,
       emitting: false,
     }).setDepth(65);
-    sparks.explode(count, x, y);
-    this.time.delayedCall(320, () => sparks.destroy());
+    sparks.explode(count + 8, x, y);
+    this.time.delayedCall(380, () => sparks.destroy());
   }
 
   emitFrostMist(x, y, radius) {
     if (!this.textures.exists("frostRing")) return;
+    this.createImpactFlash(x, y - 12, radius * 1.25, 0x8edfff, 0.22, 420, 60);
     const mist = this.add.particles(x, y - 12, "frostRing", {
-      lifespan: { min: 520, max: 820 },
-      speed: { min: 10, max: 38 },
+      lifespan: { min: 720, max: 1120 },
+      speed: { min: 18, max: 58 },
       angle: { min: 190, max: 350 },
       radial: false,
       gravityY: -18,
@@ -703,16 +707,16 @@ export class GameScene extends Phaser.Scene {
         type: "random",
         source: new Phaser.Geom.Ellipse(0, 0, radius * 1.45, radius * 0.58),
       },
-      scale: { start: 0.12, end: 0.42 },
-      alpha: { start: 0.28, end: 0 },
-      quantity: 14,
-      maxParticles: 16,
+      scale: { start: 0.22, end: 0.62 },
+      alpha: { start: 0.46, end: 0 },
+      quantity: 24,
+      maxParticles: 28,
       tint: [0xcdf7ff, 0x84d7ff],
       blendMode: Phaser.BlendModes.ADD,
       emitting: false,
     }).setDepth(60);
-    mist.explode(14, x, y - 12);
-    this.time.delayedCall(900, () => mist.destroy());
+    mist.explode(24, x, y - 12);
+    this.time.delayedCall(1180, () => mist.destroy());
   }
 
   emitIceShards(x, y, count = 10) {
@@ -732,6 +736,30 @@ export class GameScene extends Phaser.Scene {
     }).setDepth(64);
     shards.explode(count, x, y);
     this.time.delayedCall(560, () => shards.destroy());
+  }
+
+  createImpactFlash(x, y, radius, color, alpha, duration, depth) {
+    const flash = this.add.graphics().setDepth(depth);
+    flash.setBlendMode(Phaser.BlendModes.ADD);
+    flash.fillStyle(color, alpha);
+    flash.fillCircle(x, y, radius * 0.22);
+    flash.lineStyle(3, color, alpha * 1.2);
+    flash.strokeCircle(x, y, radius * 0.36);
+    this.tweens.add({
+      targets: flash,
+      alpha: 0,
+      duration,
+      ease: "Quad.easeOut",
+      onUpdate: (tween) => {
+        const p = tween.progress;
+        flash.clear();
+        flash.fillStyle(color, alpha * (1 - p));
+        flash.fillCircle(x, y, radius * (0.22 + p * 0.22));
+        flash.lineStyle(4, color, alpha * (1 - p));
+        flash.strokeCircle(x, y, radius * (0.36 + p * 0.58));
+      },
+      onComplete: () => flash.destroy(),
+    });
   }
 
   checkCards() {
