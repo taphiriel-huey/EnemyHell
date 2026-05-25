@@ -182,11 +182,11 @@ export class GameScene extends Phaser.Scene {
     this.groundImage = this.add.image(640, 628, "blackhavenGroundConcept").setDepth(17);
     this.groundImage.setDisplaySize(this.scale.width, 228);
     this.groundImage.setAlpha(this.section === 1 ? 0.72 : 0);
-    this.churchyardGroundImage = this.add.image(640, 628, "blackhavenChurchyardGroundConcept").setDepth(17);
-    this.churchyardGroundImage.setDisplaySize(this.scale.width, 228);
+    this.churchyardGroundImage = this.add.image(640, 642, "blackhavenChurchyardGroundConcept").setDepth(17);
+    this.churchyardGroundImage.setDisplaySize(this.scale.width, 156);
     this.churchyardGroundImage.setAlpha(0);
-    this.forestGroundImage = this.add.image(640, 628, "blackhavenForestGroundConcept").setDepth(17);
-    this.forestGroundImage.setDisplaySize(this.scale.width, 228);
+    this.forestGroundImage = this.add.image(640, 642, "blackhavenForestGroundConcept").setDepth(17);
+    this.forestGroundImage.setDisplaySize(this.scale.width, 156);
     this.forestGroundImage.setAlpha(0);
     this.previewLayer = this.add.graphics().setDepth(6);
     this.warningLayer = this.add.graphics().setDepth(12);
@@ -1407,8 +1407,8 @@ function drawForestConceptVeil(g, w, h) {
   g.fillRect(0, 0, w, h);
   g.fillGradientStyle(0x020304, 0x020304, 0x060507, 0x060507, 0.05, 0.14, 0.5, 0.62);
   g.fillRect(0, 0, w, h);
-  g.fillStyle(0x030405, 0.24);
-  g.fillRect(0, 565, w, 155);
+  g.fillGradientStyle(0x000000, 0x000000, 0x030405, 0x030405, 0, 0, 0.18, 0.34);
+  g.fillRect(0, 545, w, 175);
   g.lineStyle(1, 0x9f8a62, 0.16);
   g.lineBetween(70, 590, 1230, 548);
 }
