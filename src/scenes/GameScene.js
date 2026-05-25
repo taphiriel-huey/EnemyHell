@@ -534,6 +534,8 @@ export class GameScene extends Phaser.Scene {
         const dir = Math.sign(effect.x - this.player.x) || this.player.facing || 1;
         this.fxLayer.fillStyle(0xff5b19, 0.22 * p);
         drawWideSpellCone(this.fxLayer, effect.x - dir * 160, effect.y, dir, effect.radius * (1.35 + q * 0.25), 0xff6d1f, 0.26 * p);
+        this.fxLayer.fillStyle(0xffd16d, 0.14 * p);
+        this.fxLayer.fillEllipse(effect.x - dir * effect.radius * 0.1, effect.y + 6, effect.radius * (1.1 + q * 0.55), effect.radius * (0.42 + q * 0.2));
         this.fxLayer.lineStyle(14, 0xffb23f, 0.52 * p);
         this.fxLayer.strokeCircle(effect.x, effect.y, effect.radius * (0.58 + q * 0.82));
         this.fxLayer.lineStyle(4, 0xfff0a6, 0.92 * p);
@@ -550,6 +552,7 @@ export class GameScene extends Phaser.Scene {
             effect.y + Math.sin(a) * outer * 0.72,
           );
         }
+        drawHeatRakes(this.fxLayer, effect.x, effect.y, dir, effect.radius, q, p);
       }
       if (effect.kind === "staff") {
         drawStaffEffect(this.fxLayer, effect, p, this.debugView);
@@ -565,11 +568,12 @@ export class GameScene extends Phaser.Scene {
       if (effect.kind === "frostBloom") {
         const q = 1 - p;
         this.fxLayer.fillStyle(0x80dfff, 0.11 * p);
-        this.fxLayer.fillEllipse(effect.x, effect.y - 10, effect.radius * (1.35 + q * 0.9), effect.radius * (0.44 + q * 0.34));
+        this.fxLayer.fillEllipse(effect.x, effect.y - 10, effect.radius * (1.55 + q * 1.05), effect.radius * (0.48 + q * 0.38));
         this.fxLayer.lineStyle(9, 0xaeefff, 0.36 * p);
-        this.fxLayer.strokeEllipse(effect.x, effect.y - 8, effect.radius * (1.12 + q * 1.1), effect.radius * (0.38 + q * 0.46));
+        this.fxLayer.strokeEllipse(effect.x, effect.y - 8, effect.radius * (1.26 + q * 1.25), effect.radius * (0.42 + q * 0.5));
         this.fxLayer.lineStyle(3, 0xf1fdff, 0.86 * p);
-        this.fxLayer.strokeEllipse(effect.x, effect.y - 8, effect.radius * (0.62 + q * 1.32), effect.radius * (0.2 + q * 0.58));
+        this.fxLayer.strokeEllipse(effect.x, effect.y - 8, effect.radius * (0.7 + q * 1.48), effect.radius * (0.22 + q * 0.62));
+        drawFrostCracks(this.fxLayer, effect.x, effect.y - 8, effect.radius, q, p);
         for (let i = 0; i < 14; i += 1) {
           const a = (i / 14) * Math.PI * 2;
           const cx = effect.x + Math.cos(a) * effect.radius * (0.42 + q * 0.72);
@@ -590,24 +594,26 @@ export class GameScene extends Phaser.Scene {
         this.fxLayer.strokeCircle(effect.x, effect.y, effect.radius * (1 - p * 0.2));
       }
       if (effect.kind === "lightning") {
+        const jitter = Math.floor(this.time.now / 42) % 5;
         this.fxLayer.lineStyle(16, 0x1f3f83, 0.26 * p);
-        drawLightningChain(this.fxLayer, effect.start, effect.targets, 30);
+        drawLightningChain(this.fxLayer, effect.start, effect.targets, 30 + jitter * 3);
         this.fxLayer.lineStyle(12, 0x294f8f, 0.48 * p);
-        drawLightningChain(this.fxLayer, effect.start, effect.targets, 18);
+        drawLightningChain(this.fxLayer, effect.start, effect.targets, 18 - jitter * 2);
         this.fxLayer.lineStyle(6, 0x97dcff, 0.98 * p);
-        drawLightningChain(this.fxLayer, effect.start, effect.targets, 0);
+        drawJaggedLightningChain(this.fxLayer, effect.start, effect.targets, 0, jitter);
         this.fxLayer.lineStyle(1, 0xffffff, 0.95 * p);
-        drawLightningChain(this.fxLayer, effect.start, effect.targets, -12);
+        drawJaggedLightningChain(this.fxLayer, effect.start, effect.targets, -12, jitter + 2);
         drawLightningImpacts(this.fxLayer, effect.targets, p);
       }
       if (effect.kind === "lightningBurst") {
         const q = 1 - p;
+        const jitter = Math.floor(this.time.now / 35) % 7;
         this.fxLayer.lineStyle(18, 0x356dff, 0.22 * p);
-        drawLightningChain(this.fxLayer, effect.start, effect.targets, 42);
+        drawJaggedLightningChain(this.fxLayer, effect.start, effect.targets, 42, jitter);
         this.fxLayer.lineStyle(9, 0x9be7ff, 0.72 * p);
-        drawLightningChain(this.fxLayer, effect.start, effect.targets, -28);
+        drawJaggedLightningChain(this.fxLayer, effect.start, effect.targets, -28, jitter + 3);
         this.fxLayer.lineStyle(3, 0xffffff, 0.95 * p);
-        drawLightningChain(this.fxLayer, effect.start, effect.targets, 14);
+        drawJaggedLightningChain(this.fxLayer, effect.start, effect.targets, 14, jitter + 5);
         for (const target of effect.targets) {
           this.fxLayer.fillStyle(0x8deaff, 0.18 * p);
           this.fxLayer.fillCircle(target.x, target.y - target.r * 0.35, target.r * (1.1 + q * 1.2));
@@ -1894,6 +1900,35 @@ function drawLightningChain(g, start, targets, offset) {
   }
 }
 
+function drawJaggedLightningChain(g, start, targets, offset, seed = 0) {
+  let last = { x: start.x, y: start.y - 20 };
+  for (let t = 0; t < targets.length; t += 1) {
+    const target = { x: targets[t].x, y: targets[t].y - 25 };
+    const dx = target.x - last.x;
+    const dy = target.y - last.y;
+    const length = Math.hypot(dx, dy) || 1;
+    const nx = -dy / length;
+    const ny = dx / length;
+    let px = last.x;
+    let py = last.y;
+    for (let i = 1; i <= 5; i += 1) {
+      const phase = (seed + t * 11 + i * 5) % 9;
+      const wobble = ((phase - 4) / 4) * (18 + Math.min(30, length * 0.05));
+      const ratio = i / 5;
+      const x = Phaser.Math.Linear(last.x, target.x, ratio) + nx * (wobble + offset * 0.25);
+      const y = Phaser.Math.Linear(last.y, target.y, ratio) + ny * wobble + offset;
+      g.lineBetween(px, py, x, y);
+      if (i === 2 || i === 4) {
+        const branch = i === 2 ? 1 : -1;
+        g.lineBetween(x, y, x + nx * branch * 34 + dx * 0.08, y + ny * branch * 34 - 18);
+      }
+      px = x;
+      py = y;
+    }
+    last = target;
+  }
+}
+
 function drawLightningImpacts(g, targets, p) {
   for (const target of targets) {
     const radius = (target.r ?? 20) + 18;
@@ -1903,7 +1938,40 @@ function drawLightningImpacts(g, targets, p) {
     g.strokeCircle(target.x, target.y - 18, radius * (1 - p * 0.25));
     g.lineStyle(2, 0xffffff, 0.7 * p);
     g.lineBetween(target.x - radius * 0.55, target.y - 18, target.x + radius * 0.55, target.y - 18);
-  g.lineBetween(target.x, target.y - 18 - radius * 0.55, target.x, target.y - 18 + radius * 0.55);
+    g.lineBetween(target.x, target.y - 18 - radius * 0.55, target.x, target.y - 18 + radius * 0.55);
+  }
+}
+
+function drawHeatRakes(g, x, y, dir, radius, q, p) {
+  for (let i = 0; i < 7; i += 1) {
+    const yy = y - radius * 0.34 + i * radius * 0.11;
+    const startX = x - dir * radius * (0.62 - q * 0.15);
+    const endX = x + dir * radius * (0.72 + q * 0.68);
+    const bend = Math.sin(i * 1.7 + q * 3.2) * radius * 0.08;
+    g.lineStyle(i % 2 === 0 ? 3 : 2, i % 2 === 0 ? 0xffd16d : 0xff5a1f, (0.46 - i * 0.035) * p);
+    g.beginPath();
+    g.moveTo(startX, yy);
+    g.lineTo(x + dir * radius * 0.1, yy + bend);
+    g.lineTo(endX, yy - bend * 0.55);
+    g.strokePath();
+  }
+}
+
+function drawFrostCracks(g, x, y, radius, q, p) {
+  g.lineStyle(2, 0xe7fdff, 0.7 * p);
+  for (let i = 0; i < 9; i += 1) {
+    const a = -Math.PI * 0.92 + i * (Math.PI * 1.84 / 8);
+    const inner = radius * (0.12 + q * 0.18);
+    const mid = radius * (0.44 + q * 0.36);
+    const outer = radius * (0.76 + q * 0.62);
+    const sx = x + Math.cos(a) * inner;
+    const sy = y + Math.sin(a) * inner * 0.34;
+    const mx = x + Math.cos(a + 0.12 * (i % 2 ? 1 : -1)) * mid;
+    const my = y + Math.sin(a) * mid * 0.31;
+    const ex = x + Math.cos(a) * outer;
+    const ey = y + Math.sin(a) * outer * 0.27;
+    g.lineBetween(sx, sy, mx, my);
+    g.lineBetween(mx, my, ex, ey);
   }
 }
 
