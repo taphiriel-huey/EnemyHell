@@ -40,11 +40,13 @@ export function createEnemy(type, x, y, options = {}) {
     specialApplied: false,
     knockX: 0,
     knockY: 0,
+    facing: options.spawnPoint === "leftFlank" ? 1 : -1,
   };
 }
 
 export function updateEnemies(enemies, player, dt, onPlayerHit) {
   for (const enemy of enemies) {
+    const previousX = enemy.x;
     enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
     enemy.slow = Math.max(0, enemy.slow - dt);
     enemy.freeze = Math.max(0, enemy.freeze - dt);
@@ -75,6 +77,9 @@ export function updateEnemies(enemies, player, dt, onPlayerHit) {
       enemy.x += role.x * enemy.speed * slowFactor * dt;
       enemy.y += role.y * enemy.speed * slowFactor * dt;
     }
+
+    const moveX = enemy.x - previousX;
+    if (Math.abs(moveX) > 0.015) enemy.facing = Math.sign(moveX);
 
     const hitDist = enemy.radius + player.radius;
     if (distance(enemy, player) < hitDist && enemy.attackCooldown <= 0 && enemy.stagger <= 0) {

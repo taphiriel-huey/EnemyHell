@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=enemy-readability-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=enemy-readability-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=enemy-readability-1";
-import { GameScene } from "./scenes/GameScene.js?v=enemy-readability-1";
+import { BootScene } from "./scenes/BootScene.js?v=enemy-facing-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=enemy-facing-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=enemy-facing-1";
+import { GameScene } from "./scenes/GameScene.js?v=enemy-facing-1";
 
 const config = {
   type: Phaser.AUTO,

@@ -1873,11 +1873,12 @@ function isConceptEnemyTexture(textureKey) {
 
 function applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, recoilLift, depthConfig = SECTION_LAYOUTS[1].depth) {
   const depthScale = getDepthScale(enemy.y, depthConfig);
+  const flipX = shouldFlipEnemySprite(enemy);
   if (!usesConceptSprite) {
     sprite.setOrigin(0.5, 0.5);
     sprite.setScale((enemy.isBoss ? 1.28 : 1) * depthScale);
     sprite.setPosition(enemy.x, enemy.y - enemy.radius * 0.7 - recoilLift);
-    sprite.setFlipX(false);
+    sprite.setFlipX(flipX);
     return;
   }
 
@@ -1888,7 +1889,13 @@ function applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, reco
   sprite.setOrigin(0.5, 1);
   sprite.setScale(scale * depthScale);
   sprite.setPosition(enemy.x, enemy.y + enemy.radius * 0.35 - recoilLift);
-  sprite.setFlipX(enemy.spawnPoint === "leftFlank");
+  sprite.setFlipX(flipX);
+}
+
+function shouldFlipEnemySprite(enemy) {
+  const facing = enemy.facing || (enemy.spawnPoint === "leftFlank" ? 1 : -1);
+  const sourceFaces = enemy.type === "zombie" ? 1 : -1;
+  return facing !== sourceFaces;
 }
 
 function drawActiveEnemyReadability(g, enemy) {
