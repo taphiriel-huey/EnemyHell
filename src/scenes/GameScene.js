@@ -1500,8 +1500,6 @@ function drawBackgroundConceptVeil(g, w, h) {
   g.fillRect(0, 0, w, h);
   g.fillStyle(0x070607, 0.34);
   g.fillRect(0, 560, w, 160);
-  g.lineStyle(1, 0xd98a42, 0.22);
-  g.lineBetween(70, 590, 1230, 548);
 }
 
 function drawChurchyardConceptVeil(g, w, h) {
@@ -1511,8 +1509,6 @@ function drawChurchyardConceptVeil(g, w, h) {
   g.fillRect(0, 0, w, h);
   g.fillStyle(0x050607, 0.26);
   g.fillRect(0, 565, w, 155);
-  g.lineStyle(1, 0xd0a76a, 0.18);
-  g.lineBetween(70, 590, 1230, 548);
 }
 
 function drawForestConceptVeil(g, w, h) {
@@ -1522,8 +1518,6 @@ function drawForestConceptVeil(g, w, h) {
   g.fillRect(0, 0, w, h);
   g.fillGradientStyle(0x000000, 0x000000, 0x030405, 0x030405, 0, 0, 0.18, 0.34);
   g.fillRect(0, 545, w, 175);
-  g.lineStyle(1, 0x9f8a62, 0.16);
-  g.lineBetween(70, 590, 1230, 548);
 }
 
 function drawChapelWorld(g, w, h) {
@@ -1553,9 +1547,6 @@ function drawGround(g, section = 1) {
     g.fillRect(0, 565, 1280, 155);
     g.fillStyle(0x171113, 0.34);
     g.fillEllipse(625, 620, 1120, 138);
-    g.lineStyle(1, 0xd98a42, 0.18);
-    g.lineBetween(70, 590, 1230, 548);
-    g.lineBetween(120, 650, 1180, 606);
     return;
   }
   const isForest = section === 3;
@@ -1566,9 +1557,6 @@ function drawGround(g, section = 1) {
   g.fillStyle(isForest ? 0x171813 : 0x1a1a23, 0.18);
   g.fillEllipse(360, 650, 520, 74);
   g.fillEllipse(890, 636, 520, 62);
-  g.lineStyle(1, isForest ? 0x80704d : 0x6f6c82, 0.32);
-  g.lineBetween(70, 590, 1230, 548);
-  g.lineBetween(120, 650, 1180, 606);
   drawGroundStones(g, true);
   drawGroundProps(g, true);
   drawGroundEmbers(g, true);
@@ -1737,38 +1725,19 @@ function getSpellFeedbackTarget(result) {
 
 function drawPlayerReadability(g, player, now) {
   const pulse = 0.5 + Math.sin(now * 0.004) * 0.5;
-  const breath = 0.5 + Math.sin(now * 0.0017) * 0.5;
   const x = player.x;
   const y = player.y;
 
   g.fillStyle(0x03070c, 0.62);
   g.fillEllipse(x, y + 16, 84, 18);
 
-  g.lineStyle(3, 0x77cfff, 0.18 + pulse * 0.12);
-  g.beginPath();
-  g.arc(x - player.facing * 16, y - 38, 62 + breath * 4, Phaser.Math.DegToRad(player.facing > 0 ? 105 : 255), Phaser.Math.DegToRad(player.facing > 0 ? 246 : 36));
-  g.strokePath();
-  g.lineStyle(2, 0xd6b25e, 0.14 + pulse * 0.08);
-  g.beginPath();
-  g.arc(x + player.facing * 5, y - 34, 48 + breath * 3, Phaser.Math.DegToRad(player.facing > 0 ? 292 : 112), Phaser.Math.DegToRad(player.facing > 0 ? 64 : 244));
-  g.strokePath();
-
-  g.lineStyle(2, 0x9edfff, 0.34 + pulse * 0.16);
-  g.beginPath();
-  g.arc(x, y + 8, 39 + pulse * 2, Phaser.Math.DegToRad(202), Phaser.Math.DegToRad(332));
-  g.strokePath();
-  g.lineStyle(1, 0xffdf9d, 0.38);
-  g.beginPath();
-  g.arc(x, y + 8, 31 + breath * 2, Phaser.Math.DegToRad(22), Phaser.Math.DegToRad(158));
-  g.strokePath();
-
   const moteA = now * 0.002;
-  for (let i = 0; i < 3; i += 1) {
+  for (let i = 0; i < 4; i += 1) {
     const a = moteA + i * 2.1;
-    const mx = x + Math.cos(a) * (31 + i * 5);
-    const my = y - 38 + Math.sin(a * 1.4) * (34 + i * 4);
-    g.fillStyle(i === 1 ? 0xf5d89a : 0x9edfff, 0.55);
-    g.fillCircle(mx, my, i === 1 ? 1.5 : 2);
+    const mx = x + Math.cos(a) * (22 + i * 4);
+    const my = y - 42 + Math.sin(a * 1.4) * (30 + i * 3);
+    g.fillStyle(i === 1 ? 0xf5d89a : 0x9edfff, 0.38 + pulse * 0.12);
+    g.fillCircle(mx, my, i === 1 ? 1.4 : 1.8);
   }
 }
 
@@ -1790,12 +1759,11 @@ function drawAimGuide(g, player, aimPoint, enabled, now) {
   g.lineBetween(startX, startY, endX, endY);
   g.lineStyle(2, 0x9edfff, 0.26 + pulse * 0.1);
   g.lineBetween(startX, startY, endX, endY);
-  g.lineStyle(2, 0xf5d89a, 0.36);
-  g.strokeCircle(endX, endY, 11 + pulse * 2);
-  g.lineStyle(1, 0x9edfff, 0.42);
-  g.strokeCircle(endX, endY, 22 + pulse * 4);
-  g.fillStyle(0x9edfff, 0.24 + pulse * 0.12);
-  g.fillCircle(endX, endY, 4);
+  g.lineStyle(2, 0xf5d89a, 0.34);
+  g.lineBetween(endX - 10, endY, endX + 10, endY);
+  g.lineBetween(endX, endY - 10, endX, endY + 10);
+  g.fillStyle(0x9edfff, 0.24 + pulse * 0.1);
+  g.fillCircle(endX, endY, 3);
 }
 
 function drawCastPrep(g, effect, p) {
@@ -2022,21 +1990,16 @@ function shouldFlipEnemySprite(enemy) {
 function drawActiveEnemyReadability(g, enemy) {
   const color = getEnemyReadabilityColor(enemy);
   const width = enemy.isBoss ? 132 : enemy.type === "ogre" ? 106 : enemy.radius * (enemy.type === "ghoul" ? 2.7 : 2.35);
-  const height = enemy.isBoss ? 168 : enemy.type === "ogre" ? 138 : enemy.radius * (enemy.type === "ghoul" ? 3.25 : 2.9);
-  const x = enemy.x;
-  const y = enemy.y - enemy.radius * (enemy.type === "ghoul" ? 0.76 : 0.55);
   const pulse = enemy.hitFlash > 0 ? 1 : 0;
-  g.fillStyle(0x020304, enemy.type === "ogre" ? 0.5 : 0.42);
-  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.34, width * 0.82, enemy.radius * 0.55);
-  g.lineStyle(enemy.type === "ogre" ? 3 : 2, color, pulse ? 0.62 : 0.24);
-  g.beginPath();
-  g.arc(x - width * 0.34, y, height * 0.34, Phaser.Math.DegToRad(116), Phaser.Math.DegToRad(244));
-  g.strokePath();
-  g.beginPath();
-  g.arc(x + width * 0.34, y, height * 0.34, Phaser.Math.DegToRad(296), Phaser.Math.DegToRad(64));
-  g.strokePath();
-  g.fillStyle(color, pulse ? 0.11 : 0.035);
-  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.28, width * 0.58, enemy.radius * 0.5);
+  g.fillStyle(0x020304, enemy.type === "ogre" ? 0.48 : 0.36);
+  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.36, width * 0.72, enemy.radius * 0.44);
+  if (pulse > 0) {
+    g.lineStyle(enemy.type === "ogre" ? 3 : 2, color, 0.58);
+    g.lineBetween(enemy.x - width * 0.32, enemy.y - enemy.radius * 1.08, enemy.x - width * 0.22, enemy.y + enemy.radius * 0.52);
+    g.lineBetween(enemy.x + width * 0.32, enemy.y - enemy.radius * 1.08, enemy.x + width * 0.22, enemy.y + enemy.radius * 0.52);
+  }
+  g.fillStyle(color, pulse ? 0.08 : 0.025);
+  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.28, width * 0.45, enemy.radius * 0.38);
 }
 
 function getEnemyReadabilityColor(enemy) {
@@ -2160,12 +2123,18 @@ function drawActiveEnemyOverlay(g, enemy, debugView) {
   g.fillStyle(enemy.type === "ogre" ? 0x9b2e2a : 0xc6a15f, 1);
   g.fillRect(enemy.x - barW / 2, barY, barW * pct, 5);
   if (enemy.slow > 0 || enemy.freeze > 0) {
-    g.lineStyle(2, 0x9be7ff, enemy.freeze > 0 ? 0.95 : 0.55);
-    g.strokeCircle(enemy.x, enemy.y - enemy.radius * 0.2, enemy.radius + 7);
+    const alpha = enemy.freeze > 0 ? 0.78 : 0.45;
+    g.lineStyle(2, 0x9be7ff, alpha);
+    g.lineBetween(enemy.x - enemy.radius * 0.78, enemy.y - enemy.radius * 1.28, enemy.x + enemy.radius * 0.62, enemy.y - enemy.radius * 1.46);
+    g.fillStyle(0x9be7ff, alpha * 0.28);
+    g.fillCircle(enemy.x + enemy.radius * 0.42, enemy.y - enemy.radius * 1.54, 2.4);
+    g.fillCircle(enemy.x - enemy.radius * 0.34, enemy.y - enemy.radius * 1.25, 1.8);
   }
   if (enemy.burn > 0) {
-    g.lineStyle(2, 0xff8a3a, 0.45);
-    g.strokeCircle(enemy.x, enemy.y - enemy.radius * 0.2, enemy.radius + 3);
+    g.lineStyle(2, 0xff8a3a, 0.38);
+    g.lineBetween(enemy.x - enemy.radius * 0.55, enemy.y - enemy.radius * 1.36, enemy.x + enemy.radius * 0.52, enemy.y - enemy.radius * 1.18);
+    g.fillStyle(0xff8a3a, 0.22);
+    g.fillCircle(enemy.x, enemy.y - enemy.radius * 1.38, 2.2);
   }
   if (!debugView) return;
   g.lineStyle(1, 0x55d1ff, 0.8);
