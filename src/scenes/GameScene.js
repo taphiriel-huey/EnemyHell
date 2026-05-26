@@ -59,6 +59,11 @@ const SPELL_RELEASE_DELAYS = {
   lightning: 0.26,
   frost: 0.28,
 };
+const SPELL_CAST_FEEL = {
+  fire: { color: 0xff7a24, core: 0xffd37a, recoil: 16, shake: 0.003, prep: 0.34 },
+  lightning: { color: 0x55d9ff, core: 0xe8fbff, recoil: 7, shake: 0.002, prep: 0.26 },
+  frost: { color: 0x9be7ff, core: 0xf0fbff, recoil: 9, shake: 0.002, prep: 0.28 },
+};
 const LIGHTNING_IMPACT_ANIM = "lightning-impact-fx";
 const LIGHTNING_IMPACT_FRAMES = Array.from({ length: 8 }, (_, frame) => frame);
 const FROST_AREA_ANIM = "frost-area-fx";
@@ -138,6 +143,7 @@ export class GameScene extends Phaser.Scene {
     this.staffAttackAnimTimer = 0;
     this.castAnimTimer = 0;
     this.pendingSpellReleases = [];
+    this.spellFailPulse = 0;
     this.aimPoint = { x: this.player.x + 240, y: this.player.y };
     this.usingMouseAim = false;
     this.restartCastAnim = false;
@@ -253,6 +259,7 @@ export class GameScene extends Phaser.Scene {
     updateSpellCooldowns(this.spells, dt);
     this.staffAttackAnimTimer = Math.max(0, this.staffAttackAnimTimer - dt);
     this.castAnimTimer = Math.max(0, this.castAnimTimer - dt);
+    this.spellFailPulse = Math.max(0, this.spellFailPulse - dt);
     this.updatePendingSpellReleases(dt);
     updateWaves(this.waves, dt, (type, x, y, options) => {
       const enemy = createEnemy(type, x, y, options);
@@ -370,14 +377,38 @@ export class GameScene extends Phaser.Scene {
   consumeSpell(result) {
     if (!result) {
       this.cameras.main.shake(80, 0.002);
+      this.spellFailPulse = 0.18;
+      this.addFloatText("Nicht bereit", this.player.x, this.player.y - 92, "#8eb9ff");
+      this.effects.push({ kind: "castFail", x: this.player.x, y: this.player.y, t: 0.22, max: 0.22 });
       return;
     }
+    const feel = SPELL_CAST_FEEL[result.kind] ?? SPELL_CAST_FEEL.fire;
     this.castAnimTimer = CONCEPT_PLAYER_CAST_DURATION;
     this.restartCastAnim = true;
+    this.kickPlayerFromCast(result, feel);
+    this.cameras.main.shake(70, feel.shake);
+    this.effects.push({
+      kind: "castPrep",
+      spell: result.kind,
+      x: this.player.x,
+      y: this.player.y,
+      aim: result.aim ?? { x: this.player.facing || 1, y: 0 },
+      target: getSpellFeedbackTarget(result),
+      color: feel.color,
+      core: feel.core,
+      t: feel.prep,
+      max: feel.prep,
+    });
     this.pendingSpellReleases.push({
       result,
       delay: SPELL_RELEASE_DELAYS[result.kind] ?? 0.25,
     });
+  }
+
+  kickPlayerFromCast(result, feel) {
+    const aim = result.aim ?? { x: this.player.facing || 1, y: 0 };
+    this.player.x = Phaser.Math.Clamp(this.player.x - aim.x * feel.recoil, this.layout.bounds.left, this.layout.bounds.right);
+    this.player.y = Phaser.Math.Clamp(this.player.y - aim.y * feel.recoil * 0.45, this.layout.bounds.top, this.layout.bounds.bottom);
   }
 
   updatePendingSpellReleases(dt) {
@@ -397,21 +428,25 @@ export class GameScene extends Phaser.Scene {
   releaseSpellEffect(result) {
     if (result.kind === "fire") {
       this.launchFireProjectile(result.impact);
+      this.effects.push({ kind: "castRelease", spell: "fire", x: this.player.x, y: this.player.y, aim: result.aim, target: result.impact, color: 0xff7a24, core: 0xffe0a2, t: 0.22, max: 0.22 });
       this.effects.push({ kind: "fire", ...result.impact, delay: FIRE_PROJECTILE_TRAVEL_TIME * 0.72, t: 0.42, max: 0.42 });
       this.effects.push({ kind: "fireBurst", ...result.impact, delay: FIRE_PROJECTILE_TRAVEL_TIME * 0.86, t: 0.55, max: 0.55 });
-      this.cameras.main.shake(130, 0.006);
+      this.cameras.main.shake(155, 0.008);
     }
     if (result.kind === "lightning") {
       const targets = result.targets.map((e) => ({ x: e.x, y: e.y, r: e.radius }));
       this.launchLightningImpacts(result.start, targets);
+      this.effects.push({ kind: "castRelease", spell: "lightning", x: this.player.x, y: this.player.y, aim: result.aim, target: result.aimTarget, color: 0x55d9ff, core: 0xffffff, t: 0.18, max: 0.18 });
       this.effects.push({ kind: "lightning", start: result.start, targets, t: 0.32, max: 0.32 });
       this.effects.push({ kind: "lightningBurst", start: result.start, targets, t: 0.34, max: 0.34 });
-      this.cameras.main.shake(95, 0.004);
+      this.cameras.main.shake(110, 0.005);
     }
     if (result.kind === "frost") {
       this.launchFrostArea(result.cone);
+      this.effects.push({ kind: "castRelease", spell: "frost", x: this.player.x, y: this.player.y, aim: result.cone.aim, target: result.cone, color: 0x9be7ff, core: 0xffffff, t: 0.22, max: 0.22 });
       this.effects.push({ kind: "frost", ...result.cone, t: 0.42, max: 0.42 });
       this.effects.push({ kind: "frostBloom", ...result.cone, t: 0.72, max: 0.72 });
+      this.cameras.main.shake(95, 0.0035);
     }
   }
 
@@ -612,6 +647,18 @@ export class GameScene extends Phaser.Scene {
     for (const effect of this.effects) {
       if (effect.delay > 0) continue;
       const p = effect.t / effect.max;
+      if (effect.kind === "castPrep") {
+        drawCastPrep(this.fxLayer, effect, p);
+      }
+      if (effect.kind === "castRelease") {
+        drawCastRelease(this.fxLayer, effect, p);
+      }
+      if (effect.kind === "castFail") {
+        this.fxLayer.lineStyle(2, 0x6f8dff, 0.5 * p);
+        this.fxLayer.strokeCircle(effect.x, effect.y - 45, 34 * (1.35 - p));
+        this.fxLayer.lineStyle(1, 0x11162a, 0.45 * p);
+        this.fxLayer.strokeCircle(effect.x, effect.y - 45, 44 * (1.25 - p));
+      }
       if (effect.kind === "fire") {
         const dir = Math.sign(effect.x - this.player.x) || this.player.facing || 1;
         drawFireCone(this.fxLayer, effect.x - dir * 120, effect.y, dir, effect.radius, 0.28 * p);
@@ -1659,6 +1706,13 @@ function drawFlankWarning(g, flank) {
   }
 }
 
+function getSpellFeedbackTarget(result) {
+  if (result.kind === "fire") return result.impact;
+  if (result.kind === "lightning") return result.aimTarget;
+  if (result.kind === "frost") return result.cone;
+  return null;
+}
+
 function drawPlayerReadability(g, player, now) {
   const pulse = 0.5 + Math.sin(now * 0.004) * 0.5;
   const breath = 0.5 + Math.sin(now * 0.0017) * 0.5;
@@ -1708,12 +1762,55 @@ function drawAimGuide(g, player, aimPoint, enabled, now) {
   const endX = player.x + nx * guideLen;
   const endY = player.y - 34 + ny * guideLen;
   const pulse = 0.5 + Math.sin(now * 0.009) * 0.5;
-  g.lineStyle(2, 0x9edfff, 0.18 + pulse * 0.08);
+  g.lineStyle(3, 0x0b1520, 0.38);
   g.lineBetween(startX, startY, endX, endY);
-  g.lineStyle(1, 0xf5d89a, 0.28);
-  g.strokeCircle(endX, endY, 9 + pulse * 2);
-  g.fillStyle(0x9edfff, 0.18 + pulse * 0.08);
-  g.fillCircle(endX, endY, 3);
+  g.lineStyle(2, 0x9edfff, 0.26 + pulse * 0.1);
+  g.lineBetween(startX, startY, endX, endY);
+  g.lineStyle(2, 0xf5d89a, 0.36);
+  g.strokeCircle(endX, endY, 11 + pulse * 2);
+  g.lineStyle(1, 0x9edfff, 0.42);
+  g.strokeCircle(endX, endY, 22 + pulse * 4);
+  g.fillStyle(0x9edfff, 0.24 + pulse * 0.12);
+  g.fillCircle(endX, endY, 4);
+}
+
+function drawCastPrep(g, effect, p) {
+  const charge = 1 - p;
+  const aim = effect.aim ?? { x: 1, y: 0 };
+  const handX = effect.x + aim.x * 34;
+  const handY = effect.y - 48 + aim.y * 24;
+  const ring = 18 + charge * 42;
+  g.lineStyle(2, effect.color, 0.34 + charge * 0.42);
+  g.strokeCircle(handX, handY, ring);
+  g.lineStyle(1, effect.core, 0.32 + charge * 0.48);
+  g.strokeCircle(handX, handY, ring * 0.58);
+  if (effect.target) {
+    g.lineStyle(2, effect.color, 0.16 + charge * 0.22);
+    g.lineBetween(handX, handY, effect.target.x, effect.target.y - 10);
+    g.lineStyle(2, effect.core, 0.24 + charge * 0.28);
+    g.strokeCircle(effect.target.x, effect.target.y - 8, 12 + charge * 10);
+  }
+  for (let i = 0; i < 5; i += 1) {
+    const a = charge * 5.8 + i * 1.26;
+    const r = ring * (0.55 + (i % 2) * 0.32);
+    g.fillStyle(i % 2 ? effect.core : effect.color, 0.34 + charge * 0.3);
+    g.fillCircle(handX + Math.cos(a) * r, handY + Math.sin(a) * r, 2.2);
+  }
+}
+
+function drawCastRelease(g, effect, p) {
+  const burst = 1 - p;
+  const aim = effect.aim ?? { x: 1, y: 0 };
+  const x = effect.x + aim.x * 42;
+  const y = effect.y - 48 + aim.y * 28;
+  const width = 38 + burst * 84;
+  const length = 58 + burst * 120;
+  g.lineStyle(4, effect.core, 0.58 * p);
+  g.lineBetween(x, y, x + aim.x * length, y + aim.y * length);
+  g.lineStyle(2, effect.color, 0.76 * p);
+  g.strokeEllipse(x + aim.x * 18, y + aim.y * 14, width, 20 + burst * 32);
+  g.fillStyle(effect.color, 0.12 * p);
+  g.fillCircle(x, y, width * 0.7);
 }
 
 function createPlayerAnimations(scene) {
