@@ -123,6 +123,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    document.body.classList.add("combat-cursor");
     this.section = this.initialSection;
     this.layout = getSectionLayout(this.section);
     this.player = createPlayer();
@@ -168,6 +169,9 @@ export class GameScene extends Phaser.Scene {
     this.hud = createHud(this);
     this.addFloatText(`Fokus: ${this.runFocusLabel}`, 640, 164, "#f3d69d");
     if (this.section > 1) this.addFloatText(`Abschnitt ${this.section}: ${this.waves.sectionShortTitle}`, 640, 194, "#d8b976");
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      document.body.classList.remove("combat-cursor");
+    });
   }
 
   createInput() {

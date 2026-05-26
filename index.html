@@ -13,6 +13,8 @@
         font-family: "Cinzel", "Trajan Pro", Georgia, serif;
         background: #070607;
         color: #f3ead6;
+        --cursor-menu: url("./assets/ui/cursor-menu.png") 5 5, auto;
+        --cursor-aim: url("./assets/ui/cursor-aim.png") 32 32, crosshair;
       }
 
       * {
@@ -25,6 +27,7 @@
         height: 100%;
         margin: 0;
         overflow: hidden;
+        cursor: var(--cursor-menu);
         background:
           radial-gradient(circle at 40% 20%, rgba(122, 24, 21, 0.28), transparent 35%),
           linear-gradient(180deg, #0b0a0d 0%, #151014 62%, #070607 100%);
@@ -33,16 +36,24 @@
       #game {
         width: 100vw;
         height: 100vh;
+        cursor: var(--cursor-menu);
       }
 
       canvas {
         display: block;
+        cursor: var(--cursor-menu);
+      }
+
+      body.combat-cursor,
+      body.combat-cursor #game,
+      body.combat-cursor canvas {
+        cursor: var(--cursor-aim);
       }
     </style>
   </head>
   <body>
     <div id="game"></div>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <script type="module" src="./src/main.js?v=pages-clean-playfield-1"></script>
+    <script type="module" src="./src/main.js?v=custom-cursors-1"></script>
   </body>
 </html>
