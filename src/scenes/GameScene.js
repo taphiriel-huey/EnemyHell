@@ -1724,25 +1724,6 @@ function drawPlayerReadability(g, player, now) {
   g.fillEllipse(x, y + 16, 84, 18);
 }
 
-function drawAimGuide(g, player, aimPoint, enabled, now) {
-  if (!enabled || !aimPoint) return;
-  const dx = aimPoint.x - player.x;
-  const dy = aimPoint.y - player.y;
-  const len = Math.hypot(dx, dy);
-  if (len < 36) return;
-  const nx = dx / len;
-  const ny = dy / len;
-  const startX = player.x + nx * 38;
-  const startY = player.y - 34 + ny * 24;
-  const guideLen = Math.min(len, 310);
-  const endX = player.x + nx * guideLen;
-  const endY = player.y - 34 + ny * guideLen;
-  g.lineStyle(3, 0x0b1520, 0.38);
-  g.lineBetween(startX, startY, endX, endY);
-  g.lineStyle(2, 0x9edfff, 0.22);
-  g.lineBetween(startX, startY, endX, endY);
-}
-
 function drawCastPrep(g, effect, p) {
   const charge = 1 - p;
   const aim = effect.aim ?? { x: 1, y: 0 };
