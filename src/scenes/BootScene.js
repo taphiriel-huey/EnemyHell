@@ -22,6 +22,10 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet("enemySkeletonWalk", "assets/sprites/enemies/skeleton-walk.png", { frameWidth: 220, frameHeight: 180 });
     this.load.spritesheet("enemyZombieWalk", "assets/sprites/enemies/zombie-walk.png", { frameWidth: 314, frameHeight: 209, spacing: 4 });
     this.load.spritesheet("enemyGhoulWalk", "assets/sprites/enemies/ghoul-walk.png", { frameWidth: 314, frameHeight: 180, spacing: 4 });
+    this.load.audio("sfxFireball", "assets/audio/fx/fireball.mp3");
+    this.load.audio("sfxShock", "assets/audio/fx/shock1.mp3");
+    this.load.audio("sfxFrost", "assets/audio/fx/frost1.mp3");
+    this.load.audio("sfxStaff", "assets/audio/fx/stab1.mp3");
     this.load.image("enemySkeletonConcept", "assets/sprites/enemies/skeleton-concept.png");
     this.load.image("enemyZombieConcept", "assets/sprites/enemies/zombie-concept.png");
     this.load.image("enemyGhoulConcept", "assets/sprites/enemies/ghoul-concept.png");

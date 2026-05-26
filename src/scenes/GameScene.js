@@ -64,6 +64,12 @@ const SPELL_CAST_FEEL = {
   lightning: { color: 0x55d9ff, core: 0xe8fbff, recoil: 7, shake: 0.002, prep: 0.26 },
   frost: { color: 0x9be7ff, core: 0xf0fbff, recoil: 9, shake: 0.002, prep: 0.28 },
 };
+const SFX = {
+  fire: { key: "sfxFireball", volume: 0.58 },
+  lightning: { key: "sfxShock", volume: 0.5 },
+  frost: { key: "sfxFrost", volume: 0.52 },
+  staff: { key: "sfxStaff", volume: 0.42 },
+};
 const LIGHTNING_IMPACT_ANIM = "lightning-impact-fx";
 const LIGHTNING_IMPACT_FRAMES = Array.from({ length: 8 }, (_, frame) => frame);
 const FROST_AREA_ANIM = "frost-area-fx";
@@ -334,6 +340,7 @@ export class GameScene extends Phaser.Scene {
         }
       }
       this.effects.push({ kind: "staff", ...attack, hit: hits > 0, t: attack.attackDuration, max: attack.attackDuration });
+      this.playSfx("staff", hits > 0 ? 1 : 0.72);
     }
 
     if (this.consumePressed("1") || this.consumePressed("mouseright")) this.consumeSpell(castFireball(this.player, this.enemies, this.spells, this.getAimPoint()));
@@ -427,6 +434,7 @@ export class GameScene extends Phaser.Scene {
 
   releaseSpellEffect(result) {
     if (result.kind === "fire") {
+      this.playSfx("fire", result.empowered ? 1.12 : 1);
       this.launchFireProjectile(result.impact);
       this.effects.push({ kind: "castRelease", spell: "fire", x: this.player.x, y: this.player.y, aim: result.aim, target: result.impact, color: 0xff7a24, core: 0xffe0a2, t: 0.22, max: 0.22 });
       this.effects.push({ kind: "fire", ...result.impact, delay: FIRE_PROJECTILE_TRAVEL_TIME * 0.72, t: 0.42, max: 0.42 });
@@ -434,6 +442,7 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.shake(155, 0.008);
     }
     if (result.kind === "lightning") {
+      this.playSfx("lightning", result.empowered ? 1.08 : 1);
       const targets = result.targets.map((e) => ({ x: e.x, y: e.y, r: e.radius }));
       this.launchLightningImpacts(result.start, targets);
       this.effects.push({ kind: "castRelease", spell: "lightning", x: this.player.x, y: this.player.y, aim: result.aim, target: result.aimTarget, color: 0x55d9ff, core: 0xffffff, t: 0.18, max: 0.18 });
@@ -442,11 +451,24 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.shake(110, 0.005);
     }
     if (result.kind === "frost") {
+      this.playSfx("frost", result.empowered ? 1.08 : 1);
       this.launchFrostArea(result.cone);
       this.effects.push({ kind: "castRelease", spell: "frost", x: this.player.x, y: this.player.y, aim: result.cone.aim, target: result.cone, color: 0x9be7ff, core: 0xffffff, t: 0.22, max: 0.22 });
       this.effects.push({ kind: "frost", ...result.cone, t: 0.42, max: 0.42 });
       this.effects.push({ kind: "frostBloom", ...result.cone, t: 0.72, max: 0.72 });
       this.cameras.main.shake(95, 0.0035);
+    }
+  }
+
+  playSfx(kind, intensity = 1) {
+    const config = SFX[kind];
+    if (!config || !this.cache.audio.exists(config.key)) return;
+    try {
+      this.sound.play(config.key, {
+        volume: Phaser.Math.Clamp(config.volume * intensity, 0, 0.9),
+      });
+    } catch {
+      // Browsers can reject audio before the first user gesture; gameplay input will unlock it.
     }
   }
 
