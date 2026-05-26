@@ -38,9 +38,9 @@ const CONCEPT_PLAYER_WALK_ANIM = "mage-walk";
 const CONCEPT_PLAYER_IDLE_ANIM = "mage-idle";
 const CONCEPT_PLAYER_STAFF_ANIM = "mage-staff-attack";
 const CONCEPT_PLAYER_CAST_ANIM = "mage-cast";
-const CONCEPT_PLAYER_HEIGHT = 130;
+const CONCEPT_PLAYER_HEIGHT = 136;
 const CONCEPT_PLAYER_SCALE_MULTIPLIERS = {
-  [CONCEPT_PLAYER_TEXTURE]: 0.9,
+  [CONCEPT_PLAYER_TEXTURE]: 0.92,
   [CONCEPT_PLAYER_IDLE_TEXTURE]: 1,
   [CONCEPT_PLAYER_STAFF_TEXTURE]: 1,
   [CONCEPT_PLAYER_CAST_TEXTURE]: 1,
@@ -82,7 +82,7 @@ const CONCEPT_ENEMY_TEXTURES = {
   ogre: "enemyOgreConcept",
 };
 const CONCEPT_ENEMY_HEIGHTS = {
-  skeleton: 72,
+  skeleton: 84,
   zombie: 94,
   ghoul: 108,
   ogre: 162,
