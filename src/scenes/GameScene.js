@@ -79,7 +79,7 @@ const CONCEPT_ENEMY_TEXTURES = {
 const CONCEPT_ENEMY_HEIGHTS = {
   skeleton: 72,
   zombie: 94,
-  ghoul: 120,
+  ghoul: 108,
   ogre: 162,
 };
 
@@ -1893,12 +1893,17 @@ function applyEnemySpritePose(sprite, enemy, textureKey, usesConceptSprite, reco
 
 function drawActiveEnemyReadability(g, enemy) {
   const color = getEnemyReadabilityColor(enemy);
-  const width = enemy.isBoss ? 130 : enemy.type === "ogre" ? 104 : enemy.radius * 2.4;
-  const height = enemy.isBoss ? 166 : enemy.type === "ogre" ? 136 : enemy.radius * 2.9;
-  g.lineStyle(enemy.type === "ogre" ? 2 : 1, color, enemy.hitFlash > 0 ? 0.42 : 0.22);
-  g.strokeEllipse(enemy.x, enemy.y - enemy.radius * 0.55, width, height);
-  g.fillStyle(color, enemy.hitFlash > 0 ? 0.09 : 0.045);
-  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.32, width * 0.72, enemy.radius * 0.72);
+  const width = enemy.isBoss ? 132 : enemy.type === "ogre" ? 106 : enemy.radius * (enemy.type === "ghoul" ? 2.7 : 2.35);
+  const height = enemy.isBoss ? 168 : enemy.type === "ogre" ? 138 : enemy.radius * (enemy.type === "ghoul" ? 3.25 : 2.9);
+  const x = enemy.x;
+  const y = enemy.y - enemy.radius * (enemy.type === "ghoul" ? 0.76 : 0.55);
+  const pulse = enemy.hitFlash > 0 ? 1 : 0;
+  g.lineStyle(enemy.type === "ogre" ? 3 : 2, color, pulse ? 0.7 : 0.34);
+  g.strokeEllipse(x, y, width, height);
+  g.lineStyle(1, 0x0b0c0e, 0.48);
+  g.strokeEllipse(x, y, width + 4, height + 4);
+  g.fillStyle(color, pulse ? 0.1 : 0.045);
+  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.32, width * 0.7, enemy.radius * 0.64);
 }
 
 function getEnemyReadabilityColor(enemy) {
