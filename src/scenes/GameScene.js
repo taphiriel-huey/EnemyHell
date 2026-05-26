@@ -1650,6 +1650,7 @@ function drawGroundEmbers(g, isChapel) {
 }
 
 function drawZoneGuides(g, debugView, layout = SECTION_LAYOUTS[1]) {
+  if (!debugView) return;
   g.fillStyle(0x070708, 0.28);
   g.fillRect(950, 320, 330, 290);
   g.fillStyle(0x4d3823, 0.15);
@@ -1657,7 +1658,6 @@ function drawZoneGuides(g, debugView, layout = SECTION_LAYOUTS[1]) {
   g.lineStyle(2, 0x7b5c38, 0.28);
   g.lineBetween(785, 340, 785, 675);
   g.lineBetween(950, 310, 950, 660);
-  if (!debugView) return;
   g.lineStyle(2, 0x35a4ff, 0.7);
   g.strokeRect(layout.bounds.left, layout.bounds.top, layout.bounds.right - layout.bounds.left, layout.bounds.bottom - layout.bounds.top);
   g.lineStyle(2, 0xd0a455, 0.7);
@@ -1741,15 +1741,17 @@ function drawPlayerReadability(g, player, now) {
   const x = player.x;
   const y = player.y;
 
-  g.fillStyle(0x06121b, 0.72);
-  g.fillEllipse(x, y + 15, 78, 22);
+  g.fillStyle(0x03070c, 0.62);
+  g.fillEllipse(x, y + 16, 84, 18);
 
-  g.fillStyle(0x70c8ff, 0.055 + pulse * 0.025);
-  g.fillEllipse(x, y - 36, 86 + breath * 8, 126 + breath * 10);
-  g.lineStyle(2, 0x8bd7ff, 0.26 + pulse * 0.12);
-  g.strokeEllipse(x, y - 36, 58 + breath * 5, 104 + breath * 8);
-  g.lineStyle(1, 0xd6b25e, 0.18 + pulse * 0.08);
-  g.strokeEllipse(x + player.facing * 3, y - 32, 70 + breath * 6, 114 + breath * 8);
+  g.lineStyle(3, 0x77cfff, 0.18 + pulse * 0.12);
+  g.beginPath();
+  g.arc(x - player.facing * 16, y - 38, 62 + breath * 4, Phaser.Math.DegToRad(player.facing > 0 ? 105 : 255), Phaser.Math.DegToRad(player.facing > 0 ? 246 : 36));
+  g.strokePath();
+  g.lineStyle(2, 0xd6b25e, 0.14 + pulse * 0.08);
+  g.beginPath();
+  g.arc(x + player.facing * 5, y - 34, 48 + breath * 3, Phaser.Math.DegToRad(player.facing > 0 ? 292 : 112), Phaser.Math.DegToRad(player.facing > 0 ? 64 : 244));
+  g.strokePath();
 
   g.lineStyle(2, 0x9edfff, 0.34 + pulse * 0.16);
   g.beginPath();
@@ -2024,12 +2026,17 @@ function drawActiveEnemyReadability(g, enemy) {
   const x = enemy.x;
   const y = enemy.y - enemy.radius * (enemy.type === "ghoul" ? 0.76 : 0.55);
   const pulse = enemy.hitFlash > 0 ? 1 : 0;
-  g.lineStyle(enemy.type === "ogre" ? 3 : 2, color, pulse ? 0.7 : 0.34);
-  g.strokeEllipse(x, y, width, height);
-  g.lineStyle(1, 0x0b0c0e, 0.48);
-  g.strokeEllipse(x, y, width + 4, height + 4);
-  g.fillStyle(color, pulse ? 0.1 : 0.045);
-  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.32, width * 0.7, enemy.radius * 0.64);
+  g.fillStyle(0x020304, enemy.type === "ogre" ? 0.5 : 0.42);
+  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.34, width * 0.82, enemy.radius * 0.55);
+  g.lineStyle(enemy.type === "ogre" ? 3 : 2, color, pulse ? 0.62 : 0.24);
+  g.beginPath();
+  g.arc(x - width * 0.34, y, height * 0.34, Phaser.Math.DegToRad(116), Phaser.Math.DegToRad(244));
+  g.strokePath();
+  g.beginPath();
+  g.arc(x + width * 0.34, y, height * 0.34, Phaser.Math.DegToRad(296), Phaser.Math.DegToRad(64));
+  g.strokePath();
+  g.fillStyle(color, pulse ? 0.11 : 0.035);
+  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.28, width * 0.58, enemy.radius * 0.5);
 }
 
 function getEnemyReadabilityColor(enemy) {

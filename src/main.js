@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=spell-sfx-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=spell-sfx-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=spell-sfx-1";
-import { GameScene } from "./scenes/GameScene.js?v=spell-sfx-1";
+import { BootScene } from "./scenes/BootScene.js?v=silhouette-readability-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=silhouette-readability-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=silhouette-readability-1";
+import { GameScene } from "./scenes/GameScene.js?v=silhouette-readability-1";
 
 const config = {
   type: Phaser.AUTO,
