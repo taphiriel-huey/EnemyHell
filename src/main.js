@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=cursor-alpha-tune-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=cursor-alpha-tune-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=cursor-alpha-tune-1";
-import { GameScene } from "./scenes/GameScene.js?v=cursor-alpha-tune-1";
+import { BootScene } from "./scenes/BootScene.js?v=ui-atlas-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=ui-atlas-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=ui-atlas-1";
+import { GameScene } from "./scenes/GameScene.js?v=ui-atlas-1";
 
 const config = {
   type: Phaser.AUTO,

@@ -2,6 +2,17 @@ export function createHud(scene) {
   const hud = scene.add.container(0, 0).setDepth(1000).setScrollFactor(0);
   const g = scene.add.graphics();
   hud.add(g);
+  const frames = {
+    hp: addFrame(scene, hud, "uiFrameHudWide", 24, 20, 300, 86, 0.78),
+    wave: addFrame(scene, hud, "uiFrameHudWide", 492, 20, 296, 76, 0.78),
+    boss: addFrame(scene, hud, "uiFrameHudWide", 430, 105, 420, 38, 0.72),
+    skillbar: addFrame(scene, hud, "uiFrameHudWide", 350, 618, 580, 82, 0.72),
+    hint: addFrame(scene, hud, "uiFrameButtonWide", 950, 590, 270, 60, 0.72),
+    slots: [],
+  };
+  for (let i = 0; i < 5; i += 1) {
+    frames.slots.push(addFrame(scene, hud, "uiFrameSkillSlot", 438 + i * 88, 632, 62, 48, 0.88));
+  }
 
   const text = {
     wave: scene.add.text(640, 28, "", font(18, "#f3dec0")).setOrigin(0.5, 0),
@@ -21,11 +32,11 @@ export function createHud(scene) {
   hud.add([text.wave, text.alert, text.phase, text.boss, text.gold, text.hint, text.skills]);
   hud.add(text.slotLabels);
   hud.add(text.cooldowns);
-  return { hud, g, text };
+  return { hud, g, text, frames };
 }
 
 export function drawHud(ui, state) {
-  const { g, text } = ui;
+  const { g, text, frames } = ui;
   g.clear();
   panel(g, 24, 20, 300, 86);
   g.fillStyle(0x111015, 1);
@@ -48,6 +59,7 @@ export function drawHud(ui, state) {
   text.alert.setText(state.bossIncoming ? "Miniboss naehert sich" : state.flankIncoming ? "Flanke!" : state.ogreIncoming ? "Schwere Einheit naehert sich" : "");
 
   if (state.boss) {
+    frames?.boss?.setVisible(true);
     panel(g, 430, 105, 420, 38);
     text.boss.setText(state.boss.name ?? "Miniboss");
     g.fillStyle(0x070708, 0.92);
@@ -55,6 +67,7 @@ export function drawHud(ui, state) {
     g.fillStyle(0x8f2d2a, 1);
     g.fillRect(458, 127, 364 * Math.max(0, state.boss.hp / state.boss.maxHp), 8);
   } else {
+    frames?.boss?.setVisible(false);
     text.boss.setText("");
   }
 
@@ -72,10 +85,12 @@ export function drawHud(ui, state) {
     const lacksMana = slot && slot.currentCooldown <= 0 && !slot.canCast;
     const unavailable = onCooldown || lacksMana;
     const pulse = slot?.readyPulse ?? 0;
-    g.fillStyle(0x111015, 0.96);
-    g.lineStyle(pulse > 0 ? 3 : 1, pulse > 0 ? 0xffe3a6 : i < 3 ? 0x9e7744 : 0x4f4242, 1);
-    g.fillRoundedRect(x, 632, 62, 48, 3);
-    g.strokeRoundedRect(x, 632, 62, 48, 3);
+    g.fillStyle(0x070609, 0.42);
+    g.fillRoundedRect(x + 6, 637, 50, 38, 3);
+    if (pulse > 0) {
+      g.lineStyle(2, 0xffe3a6, 0.85);
+      g.strokeRoundedRect(x, 632, 62, 48, 3);
+    }
     if (slot) {
       text.slotLabels[i].setPosition(x + 31, 646);
       text.slotLabels[i].setText(`${slot.hotkey}\n${slot.label}`);
@@ -130,6 +145,8 @@ export function createCardOverlay(scene, cards, onPick) {
     const x = 360 + index * 280;
     const plate = scene.add.graphics();
     panel(plate, x - 110, 235, 220, 230);
+    overlay.add(plate);
+    addFrame(scene, overlay, "uiFrameCardPanel", x - 110, 235, 220, 230, 0.82);
     const title = scene.add.text(x, 276, card.title, font(21, "#f2dec0")).setOrigin(0.5, 0);
     const body = scene.add.text(x, 330, card.body, {
       ...font(16, "#cdbb9d"),
@@ -142,7 +159,7 @@ export function createCardOverlay(scene, cards, onPick) {
       choose(index);
     });
     plates.push({ plate, x });
-    overlay.add([plate, title, body, pick]);
+    overlay.add([title, body, pick]);
   });
 
   const onKeyDown = (event) => {
@@ -199,10 +216,18 @@ export function createCardOverlay(scene, cards, onPick) {
 }
 
 function panel(g, x, y, w, h, selected = false) {
-  g.fillStyle(0x110f13, 0.88);
-  g.lineStyle(selected ? 3 : 1, selected ? 0xffdf9d : 0x9d7442, selected ? 1 : 0.85);
+  g.fillStyle(0x08070a, selected ? 0.72 : 0.62);
+  g.lineStyle(selected ? 3 : 1, selected ? 0xffdf9d : 0x9d7442, selected ? 0.95 : 0.28);
   g.fillRoundedRect(x, y, w, h, 5);
   g.strokeRoundedRect(x, y, w, h, 5);
+}
+
+function addFrame(scene, parent, key, x, y, w, h, alpha = 0.8) {
+  if (!scene.textures.exists(key)) return null;
+  const frame = scene.add.image(x, y, key).setOrigin(0, 0).setDisplaySize(w, h).setAlpha(alpha);
+  frame.setTint(0xf0d19a);
+  parent.add(frame);
+  return frame;
 }
 
 function font(size, color) {

@@ -11,6 +11,10 @@ export class BootScene extends Phaser.Scene {
     this.load.image("blackhavenChurchyardGroundConcept", "assets/concept/blackhaven-churchyard-ground-strip.png");
     this.load.image("blackhavenForestGroundConcept", "assets/concept/blackhaven-forest-ground-strip.png");
     this.load.image("blackhavenStartArt", "assets/concept/start-screen-art.png");
+    this.load.image("uiFrameHudWide", "assets/ui/frame-hud-wide.png");
+    this.load.image("uiFrameSkillSlot", "assets/ui/frame-skill-slot.png");
+    this.load.image("uiFrameCardPanel", "assets/ui/frame-card-panel.png");
+    this.load.image("uiFrameButtonWide", "assets/ui/frame-button-wide.png");
     this.load.image("playerMageConcept", "assets/sprites/player/mage-concept.png");
     this.load.spritesheet("playerMageIdleStable", "assets/sprites/player/mage-idle-from-cast.png", { frameWidth: 468, frameHeight: 280 });
     this.load.spritesheet("playerMageWalk", "assets/sprites/player/mage-walk.png", { frameWidth: 320, frameHeight: 254 });
