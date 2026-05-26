@@ -1,7 +1,7 @@
-import { BootScene } from "./scenes/BootScene.js?v=no-prototype-circles-1";
-import { MenuScene } from "./scenes/MenuScene.js?v=no-prototype-circles-1";
-import { CharacterScene } from "./scenes/CharacterScene.js?v=no-prototype-circles-1";
-import { GameScene } from "./scenes/GameScene.js?v=no-prototype-circles-1";
+import { BootScene } from "./scenes/BootScene.js?v=clean-playfield-fast-load-1";
+import { MenuScene } from "./scenes/MenuScene.js?v=clean-playfield-fast-load-1";
+import { CharacterScene } from "./scenes/CharacterScene.js?v=clean-playfield-fast-load-1";
+import { GameScene } from "./scenes/GameScene.js?v=clean-playfield-fast-load-1";
 
 const config = {
   type: Phaser.AUTO,

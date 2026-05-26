@@ -623,7 +623,6 @@ export class GameScene extends Phaser.Scene {
 
   renderActors() {
     this.playerLayer.clear();
-    drawAimGuide(this.playerLayer, this.player, this.aimPoint, this.usingMouseAim, this.time.now);
     drawPlayerReadability(this.playerLayer, this.player, this.time.now);
     updatePlayerSpriteAnimation(this, this.mage, this.inputState, this.mageTextureKey, this.player, this.restartStaffAttackAnim, this.staffAttackAnimTimer, this.castAnimTimer, this.restartCastAnim);
     this.restartStaffAttackAnim = false;
@@ -656,7 +655,6 @@ export class GameScene extends Phaser.Scene {
       sprite.setDepth(20 + enemy.y * 0.02);
       sprite.setTint(getEnemyTint(enemy));
       sprite.setAlpha(1);
-      drawActiveEnemyReadability(this.activeInfoLayer, enemy);
       drawActiveEnemyOverlay(this.activeInfoLayer, enemy, this.debugView);
       drawEnemyTelegraph(this.activeInfoLayer, enemy);
     }
@@ -1580,11 +1578,6 @@ function drawGroundStones(g, isChapel) {
       g.strokeRoundedRect(x, row.y + wobble, row.w, row.h, 3);
     }
   }
-  g.lineStyle(1, isChapel ? 0x8290aa : 0xb17742, 0.16);
-  for (let i = 0; i < 9; i += 1) {
-    const y = 584 + i * 12;
-    g.lineBetween(180 + i * 11, y, 1120 - i * 18, y - 38);
-  }
 }
 
 function drawGroundProps(g, isChapel) {
@@ -1724,21 +1717,11 @@ function getSpellFeedbackTarget(result) {
 }
 
 function drawPlayerReadability(g, player, now) {
-  const pulse = 0.5 + Math.sin(now * 0.004) * 0.5;
   const x = player.x;
   const y = player.y;
 
   g.fillStyle(0x03070c, 0.62);
   g.fillEllipse(x, y + 16, 84, 18);
-
-  const moteA = now * 0.002;
-  for (let i = 0; i < 4; i += 1) {
-    const a = moteA + i * 2.1;
-    const mx = x + Math.cos(a) * (22 + i * 4);
-    const my = y - 42 + Math.sin(a * 1.4) * (30 + i * 3);
-    g.fillStyle(i === 1 ? 0xf5d89a : 0x9edfff, 0.38 + pulse * 0.12);
-    g.fillCircle(mx, my, i === 1 ? 1.4 : 1.8);
-  }
 }
 
 function drawAimGuide(g, player, aimPoint, enabled, now) {
@@ -1754,16 +1737,10 @@ function drawAimGuide(g, player, aimPoint, enabled, now) {
   const guideLen = Math.min(len, 310);
   const endX = player.x + nx * guideLen;
   const endY = player.y - 34 + ny * guideLen;
-  const pulse = 0.5 + Math.sin(now * 0.009) * 0.5;
   g.lineStyle(3, 0x0b1520, 0.38);
   g.lineBetween(startX, startY, endX, endY);
-  g.lineStyle(2, 0x9edfff, 0.26 + pulse * 0.1);
+  g.lineStyle(2, 0x9edfff, 0.22);
   g.lineBetween(startX, startY, endX, endY);
-  g.lineStyle(2, 0xf5d89a, 0.34);
-  g.lineBetween(endX - 10, endY, endX + 10, endY);
-  g.lineBetween(endX, endY - 10, endX, endY + 10);
-  g.fillStyle(0x9edfff, 0.24 + pulse * 0.1);
-  g.fillCircle(endX, endY, 3);
 }
 
 function drawCastPrep(g, effect, p) {
@@ -1985,28 +1962,6 @@ function shouldFlipEnemySprite(enemy) {
   const facing = enemy.facing || (enemy.spawnPoint === "leftFlank" ? 1 : -1);
   const sourceFaces = enemy.type === "zombie" ? 1 : -1;
   return facing !== sourceFaces;
-}
-
-function drawActiveEnemyReadability(g, enemy) {
-  const color = getEnemyReadabilityColor(enemy);
-  const width = enemy.isBoss ? 132 : enemy.type === "ogre" ? 106 : enemy.radius * (enemy.type === "ghoul" ? 2.7 : 2.35);
-  const pulse = enemy.hitFlash > 0 ? 1 : 0;
-  g.fillStyle(0x020304, enemy.type === "ogre" ? 0.48 : 0.36);
-  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.36, width * 0.72, enemy.radius * 0.44);
-  if (pulse > 0) {
-    g.lineStyle(enemy.type === "ogre" ? 3 : 2, color, 0.58);
-    g.lineBetween(enemy.x - width * 0.32, enemy.y - enemy.radius * 1.08, enemy.x - width * 0.22, enemy.y + enemy.radius * 0.52);
-    g.lineBetween(enemy.x + width * 0.32, enemy.y - enemy.radius * 1.08, enemy.x + width * 0.22, enemy.y + enemy.radius * 0.52);
-  }
-  g.fillStyle(color, pulse ? 0.08 : 0.025);
-  g.fillEllipse(enemy.x, enemy.y + enemy.radius * 0.28, width * 0.45, enemy.radius * 0.38);
-}
-
-function getEnemyReadabilityColor(enemy) {
-  if (enemy.type === "skeleton") return 0xf0dfb8;
-  if (enemy.type === "zombie") return 0x8db47b;
-  if (enemy.type === "ghoul") return 0xd86da4;
-  return 0xc0915c;
 }
 
 function drawFireCone(g, x, y, dir, radius, alpha) {

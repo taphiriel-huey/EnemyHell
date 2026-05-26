@@ -2,8 +2,10 @@ const MUSIC_KEY = "blackhavenMetal";
 const MUSIC_REGISTRY_KEY = "blackhavenMusic";
 const MUSIC_FALLBACK_KEY = "blackhavenMusicElement";
 const MUSIC_URL = "assets/audio/EH_Metal1.mp4";
+const MUSIC_DISABLED_FOR_FAST_TESTS = true;
 
 export function ensureBlackhavenMusic(scene) {
+  if (MUSIC_DISABLED_FOR_FAST_TESTS) return null;
   let music = scene.registry.get(MUSIC_REGISTRY_KEY);
   if (!music && scene.cache?.audio?.exists?.(MUSIC_KEY)) {
     try {
@@ -24,6 +26,7 @@ export function ensureBlackhavenMusic(scene) {
 }
 
 export function toggleBlackhavenMusic(scene) {
+  if (MUSIC_DISABLED_FOR_FAST_TESTS) return false;
   const existing = scene.registry.get(MUSIC_REGISTRY_KEY) ?? scene.registry.get(MUSIC_FALLBACK_KEY);
   if (!existing) {
     ensureBlackhavenMusic(scene);
@@ -41,6 +44,7 @@ export function toggleBlackhavenMusic(scene) {
 }
 
 export function isBlackhavenMusicEnabled(scene) {
+  if (MUSIC_DISABLED_FOR_FAST_TESTS) return false;
   const music = scene.registry.get(MUSIC_REGISTRY_KEY) ?? scene.registry.get(MUSIC_FALLBACK_KEY);
   if (!music) return false;
   if (music.setMute) return music.isPlaying && !music.mute;

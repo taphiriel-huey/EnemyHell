@@ -1,4 +1,4 @@
-import { isBlackhavenMusicEnabled, toggleBlackhavenMusic } from "../systems/audio.js";
+import { toggleBlackhavenMusic } from "../systems/audio.js";
 
 const START_CHOICES = [
   {
@@ -148,7 +148,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   getMusicHintText() {
-    return `M Musik: ${isBlackhavenMusicEnabled(this) ? "an" : "aus"}`;
+    return `M Musik: fuer schnelle Tests deaktiviert`;
   }
 
   changeStartChoice(direction) {
