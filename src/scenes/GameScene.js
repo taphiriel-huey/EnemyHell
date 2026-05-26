@@ -119,11 +119,11 @@ export class GameScene extends Phaser.Scene {
 
   init(data) {
     this.startFocus = data?.startFocus ?? "pyromantic";
-    this.startSection = data?.startSection ?? 1;
+    this.initialSection = data?.startSection ?? 1;
   }
 
   create() {
-    this.section = this.startSection;
+    this.section = this.initialSection;
     this.layout = getSectionLayout(this.section);
     this.player = createPlayer();
     this.player.x = this.layout.playerStart.x;
