@@ -66,7 +66,7 @@ const FROST_AREA_FRAMES = Array.from({ length: 6 }, (_, frame) => frame);
 const SKELETON_WALK_ANIM = "skeleton-walk";
 const SKELETON_WALK_FRAMES = Array.from({ length: 8 }, (_, frame) => frame);
 const ZOMBIE_WALK_ANIM = "zombie-walk";
-const ZOMBIE_WALK_FRAMES = Array.from({ length: 24 }, (_, frame) => frame);
+const ZOMBIE_WALK_FRAMES = Array.from({ length: 8 }, (_, frame) => frame);
 const GHOUL_WALK_ANIM = "ghoul-walk";
 const GHOUL_WALK_FRAMES = Array.from({ length: 28 }, (_, frame) => frame);
 const USE_CONCEPT_ENEMY_SPRITES = true;
