@@ -35,6 +35,7 @@ const CONCEPT_PLAYER_IDLE_TEXTURE = "playerMageIdleStable";
 const CONCEPT_PLAYER_STAFF_TEXTURE = "playerMageStaffAttack";
 const CONCEPT_PLAYER_CAST_TEXTURE = "playerMageCast";
 const CONCEPT_PLAYER_WALK_ANIM = "mage-walk";
+const CONCEPT_PLAYER_WALK_BACK_ANIM = "mage-walk-back";
 const CONCEPT_PLAYER_IDLE_ANIM = "mage-idle";
 const CONCEPT_PLAYER_STAFF_ANIM = "mage-staff-attack";
 const CONCEPT_PLAYER_CAST_ANIM = "mage-cast";
@@ -154,6 +155,8 @@ export class GameScene extends Phaser.Scene {
     this.aimPoint = { x: this.player.x + 240, y: this.player.y };
     this.usingMouseAim = false;
     this.restartCastAnim = false;
+    this.silhouetteSprites = [];
+    this.silhouetteIndex = 0;
     this.runFocusLabel = applyStartFocus(this.startFocus, this.player, this.spells);
 
     this.createInput();
@@ -171,6 +174,8 @@ export class GameScene extends Phaser.Scene {
     if (this.section > 1) this.addFloatText(`Abschnitt ${this.section}: ${this.waves.sectionShortTitle}`, 640, 194, "#d8b976");
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       document.body.classList.remove("combat-cursor");
+      this.silhouetteSprites = [];
+      this.silhouetteIndex = 0;
     });
   }
 
@@ -201,7 +206,7 @@ export class GameScene extends Phaser.Scene {
       window.removeEventListener("keyup", this.onKeyUp);
       this.input.off("pointerdown", this.onPointerDown, this);
     });
-    this.inputState = { up: false, left: false, down: false, right: false, dash: false };
+    this.inputState = { up: false, left: false, down: false, right: false, dash: false, aimLocked: false };
   }
 
   onPointerDown(pointer) {
@@ -264,6 +269,8 @@ export class GameScene extends Phaser.Scene {
     if (this.pausedForCard || this.pausedForMenu || this.pausedForSection || this.gameOver) return;
 
     this.readInput();
+    this.updateMouseAim();
+    this.inputState.aimLocked = this.usingMouseAim;
     updatePlayer(this.player, this.inputState, dt, this.layout.bounds);
     this.updateMouseAim();
     updateSpellCooldowns(this.spells, dt);
@@ -602,6 +609,8 @@ export class GameScene extends Phaser.Scene {
     drawZoneGuides(this.ground, this.debugView, this.layout);
     drawPickups(this.pickupLayer, this.pickups, this.debugView, this.layout);
 
+    this.silhouetteIndex = 0;
+
     for (const item of this.waves.preview) {
       const progress = Phaser.Math.Clamp(1 - item.depth / 680, 0, 1);
       const warningProgress = Phaser.Math.Clamp((progress - 0.56) / 0.44, 0, 1);
@@ -614,14 +623,20 @@ export class GameScene extends Phaser.Scene {
         ? Phaser.Math.Linear(0.94, 1.22, warningProgress)
         : Phaser.Math.Linear(0.48, 0.84, progress / 0.56));
       if (!isWarning) {
-        drawPreviewSilhouette(this.previewLayer, item.type, x + Math.sin(item.wobble * 2) * 5, y, scale, 0.42, "background");
+        drawPreviewSilhouette(this, item.type, x + Math.sin(item.wobble * 2) * 5, y, scale, 0.42, "background");
       } else {
-        drawPreviewSilhouette(this.warningLayer, item.type, x + Math.sin(item.wobble * 3) * 3, y, scale, 0.7, "warning");
+        drawPreviewSilhouette(this, item.type, x + Math.sin(item.wobble * 3) * 3, y, scale, 0.7, "warning");
       }
     }
 
     for (const flank of this.waves.flankWarnings) {
-      drawFlankWarning(this.warningLayer, flank);
+      drawFlankWarning(this, flank);
+    }
+
+    if (this.silhouetteSprites) {
+      for (let i = this.silhouetteIndex; i < this.silhouetteSprites.length; i++) {
+        this.silhouetteSprites[i].setVisible(false);
+      }
     }
   }
 
@@ -632,6 +647,7 @@ export class GameScene extends Phaser.Scene {
     this.restartStaffAttackAnim = false;
     this.restartCastAnim = false;
     applyPlayerSpritePose(this.mage, this.player, this.mage.texture.key, this.layout.depth);
+    applyPlayerAimPose(this.mage, this.player, this.aimPoint, this.usingMouseAim, this.inputState, this.castAnimTimer, this.staffAttackAnimTimer);
     this.mage.setDepth(20 + this.player.y * 0.02);
     this.mage.setFlipX(this.player.facing < 0);
     this.mage.setAlpha(this.player.invulnerable > 0 ? 0.65 : 1);
@@ -829,6 +845,8 @@ export class GameScene extends Phaser.Scene {
   launchLightningImpacts(start, targets) {
     if (!this.textures.exists("lightningImpactFx")) return;
     let previous = start;
+    const targetCount = targets.length;
+    const particlesPerTarget = Math.max(3, Math.floor(12 / targetCount));
     for (const target of targets) {
       const dir = Math.sign(target.x - previous.x) || 1;
       const sprite = this.add.sprite(target.x, target.y - target.r * 0.35, "lightningImpactFx").setDepth(63);
@@ -840,7 +858,7 @@ export class GameScene extends Phaser.Scene {
       sprite.setDisplaySize(150 * scale, 98 * scale);
       sprite.setAngle(Phaser.Math.Between(-8, 8));
       sprite.anims.play(LIGHTNING_IMPACT_ANIM, true);
-      this.emitLightningSparks(target.x, target.y - target.r * 0.35, 10);
+      this.emitLightningSparks(target.x, target.y - target.r * 0.35, particlesPerTarget);
       this.tweens.add({
         targets: sprite,
         alpha: 0,
@@ -875,12 +893,12 @@ export class GameScene extends Phaser.Scene {
   createFireTrail(sprite) {
     if (!this.textures.exists("fireball")) return null;
     const trail = this.add.particles(0, 0, "fireball", {
-      lifespan: { min: 180, max: 340 },
-      speed: { min: 22, max: 78 },
-      scale: { start: 0.42, end: 0 },
-      alpha: { start: 0.92, end: 0 },
-      frequency: 10,
-      quantity: 2,
+      lifespan: { min: 140, max: 240 },
+      speed: { min: 15, max: 45 },
+      scale: { start: 0.22, end: 0 },
+      alpha: { start: 0.72, end: 0 },
+      frequency: 25,
+      quantity: 1,
       tint: [0xffd16d, 0xff7a2a, 0x7b3b24],
       blendMode: Phaser.BlendModes.ADD,
       emitting: true,
@@ -892,84 +910,87 @@ export class GameScene extends Phaser.Scene {
   emitFireExplosion(x, y, radius) {
     if (!this.textures.exists("fireball")) return;
     this.createImpactFlash(x, y, radius * 1.55, 0xff7a24, 0.32, 260, 66);
+    const burstCount = Phaser.Math.Clamp(Math.round(radius / 12), 12, 16);
     const burst = this.add.particles(x, y, "fireball", {
-      lifespan: { min: 420, max: 760 },
-      speed: { min: 150, max: 340 },
+      lifespan: { min: 250, max: 450 },
+      speed: { min: 100, max: 240 },
       angle: { min: 0, max: 360 },
-      gravityY: 115,
-      scale: { start: 0.62, end: 0 },
-      alpha: { start: 1, end: 0 },
-      quantity: 34,
-      maxParticles: 40,
+      gravityY: 100,
+      scale: { start: 0.4, end: 0 },
+      alpha: { start: 0.85, end: 0 },
+      quantity: burstCount,
+      maxParticles: burstCount,
       tint: [0xfff0a6, 0xff8a2d, 0x6e4637],
       blendMode: Phaser.BlendModes.ADD,
       emitting: false,
     }).setDepth(64);
-    burst.explode(Phaser.Math.Clamp(Math.round(radius / 5), 26, 40), x, y);
-    this.time.delayedCall(820, () => burst.destroy());
+    burst.explode(burstCount, x, y);
+    this.time.delayedCall(500, () => burst.destroy());
   }
 
   emitLightningSparks(x, y, count = 10) {
     if (!this.textures.exists("lightning")) return;
     this.createImpactFlash(x, y, 78, 0x8deaff, 0.28, 150, 67);
     const sparks = this.add.particles(x, y, "lightning", {
-      lifespan: { min: 180, max: 330 },
-      speed: { min: 170, max: 360 },
+      lifespan: { min: 140, max: 280 },
+      speed: { min: 140, max: 280 },
       angle: { min: 0, max: 360 },
-      scale: { start: 0.5, end: 0 },
-      alpha: { start: 1, end: 0 },
-      quantity: count + 8,
-      maxParticles: count + 8,
+      scale: { start: 0.35, end: 0 },
+      alpha: { start: 0.95, end: 0 },
+      quantity: count,
+      maxParticles: count,
       tint: [0xffffff, 0x9be7ff, 0x4aa8ff],
       blendMode: Phaser.BlendModes.ADD,
       emitting: false,
     }).setDepth(65);
-    sparks.explode(count + 8, x, y);
-    this.time.delayedCall(380, () => sparks.destroy());
+    sparks.explode(count, x, y);
+    this.time.delayedCall(320, () => sparks.destroy());
   }
 
   emitFrostMist(x, y, radius) {
     if (!this.textures.exists("frostRing")) return;
-    this.createImpactFlash(x, y - 12, radius * 1.25, 0x8edfff, 0.22, 420, 60);
+    this.createImpactFlash(x, y - 12, radius * 1.25, 0x8edfff, 0.16, 420, 60);
+    const mistCount = 14;
     const mist = this.add.particles(x, y - 12, "frostRing", {
-      lifespan: { min: 720, max: 1120 },
-      speed: { min: 18, max: 58 },
+      lifespan: { min: 500, max: 800 },
+      speed: { min: 12, max: 42 },
       angle: { min: 190, max: 350 },
       radial: false,
-      gravityY: -18,
+      gravityY: -12,
       emitZone: {
         type: "random",
         source: new Phaser.Geom.Ellipse(0, 0, radius * 1.45, radius * 0.58),
       },
-      scale: { start: 0.22, end: 0.62 },
-      alpha: { start: 0.46, end: 0 },
-      quantity: 24,
-      maxParticles: 28,
+      scale: { start: 0.18, end: 0.52 },
+      alpha: { start: 0.28, end: 0 },
+      quantity: mistCount,
+      maxParticles: mistCount,
       tint: [0xcdf7ff, 0x84d7ff],
-      blendMode: Phaser.BlendModes.ADD,
+      blendMode: Phaser.BlendModes.SCREEN,
       emitting: false,
     }).setDepth(60);
-    mist.explode(24, x, y - 12);
-    this.time.delayedCall(1180, () => mist.destroy());
+    mist.explode(mistCount, x, y - 12);
+    this.time.delayedCall(850, () => mist.destroy());
   }
 
   emitIceShards(x, y, count = 10) {
     if (!this.textures.exists("frostRing")) return;
+    const shardsCount = Math.min(count, 8);
     const shards = this.add.particles(x, y, "frostRing", {
-      lifespan: { min: 240, max: 480 },
-      speed: { min: 70, max: 170 },
+      lifespan: { min: 180, max: 360 },
+      speed: { min: 60, max: 140 },
       angle: { min: 205, max: 335 },
-      gravityY: 35,
-      scale: { start: 0.1, end: 0 },
-      alpha: { start: 0.82, end: 0 },
-      quantity: count,
-      maxParticles: count,
+      gravityY: 30,
+      scale: { start: 0.08, end: 0 },
+      alpha: { start: 0.72, end: 0 },
+      quantity: shardsCount,
+      maxParticles: shardsCount,
       tint: [0xffffff, 0xaeefff, 0x6bbdff],
-      blendMode: Phaser.BlendModes.ADD,
+      blendMode: Phaser.BlendModes.SCREEN,
       emitting: false,
     }).setDepth(64);
-    shards.explode(count, x, y);
-    this.time.delayedCall(560, () => shards.destroy());
+    shards.explode(shardsCount, x, y);
+    this.time.delayedCall(400, () => shards.destroy());
   }
 
   createImpactFlash(x, y, radius, color, alpha, duration, depth) {
@@ -1180,7 +1201,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   togglePauseMenu(force) {
-    if (this.gameOver || this.pausedForCard) return;
+    if (this.gameOver || this.pausedForCard || this.pausedForSection) return;
     const shouldPause = force ?? !this.pausedForMenu;
     if (shouldPause === this.pausedForMenu) return;
     this.pausedForMenu = shouldPause;
@@ -1444,7 +1465,7 @@ function createEndButton(scene, x, y, label, depth, action) {
     g.fillRoundedRect(-92, -24, 184, 48, 4);
     g.strokeRoundedRect(-92, -24, 184, 48, 4);
   });
-  hit.on("pointerup", action);
+  hit.on("pointerdown", () => scene.time.delayedCall(0, action));
   return { button, hit, action };
 }
 
@@ -1545,15 +1566,18 @@ function getIntermissionCopy(section) {
 function drawGround(g, section = 1) {
   const isLaterSection = section >= 2;
   if (!isLaterSection) {
-    g.fillStyle(0x070607, 0.36);
+    g.fillGradientStyle(0x030203, 0x030203, 0x0a0809, 0x0a0809, 0.6, 0.6, 0.2, 0.2);
     g.fillRect(0, 565, 1280, 155);
     g.fillStyle(0x171113, 0.34);
     g.fillEllipse(625, 620, 1120, 138);
     return;
   }
   const isForest = section === 3;
-  g.fillStyle(isForest ? 0x07090a : 0x090b10, 0.24);
+  const topColor = isForest ? 0x040506 : 0x050608;
+  const botColor = isForest ? 0x0a0c0e : 0x0d1016;
+  g.fillGradientStyle(topColor, topColor, botColor, botColor, 0.6, 0.6, 0.2, 0.2);
   g.fillRect(0, 565, 1280, 155);
+  
   g.fillStyle(isForest ? 0x10120f : 0x11141b, 0.26);
   g.fillEllipse(625, 620, 1120, 138);
   g.fillStyle(isForest ? 0x171813 : 0x1a1a23, 0.18);
@@ -1567,18 +1591,19 @@ function drawGround(g, section = 1) {
 function drawGroundStones(g, isChapel) {
   const stone = isChapel ? 0x283040 : 0x302021;
   const line = isChapel ? 0x6f6c82 : 0x704d35;
+  // Use perspective: smaller and darker towards the top (horizon)
   const rows = [
-    { y: 574, h: 18, offset: 20, count: 12, w: 92 },
-    { y: 602, h: 20, offset: 74, count: 10, w: 104 },
-    { y: 632, h: 22, offset: 16, count: 11, w: 98 },
+    { y: 574, h: 12, offset: 20, count: 15, w: 64, alpha: 0.08 },
+    { y: 602, h: 18, offset: 74, count: 11, w: 92, alpha: 0.12 },
+    { y: 632, h: 26, offset: 16, count: 9, w: 124, alpha: 0.16 },
   ];
   for (const row of rows) {
     for (let i = 0; i < row.count; i += 1) {
       const x = row.offset + i * (row.w + 22);
       const wobble = (i % 3) * 3;
-      g.fillStyle(stone, 0.14);
+      g.fillStyle(stone, row.alpha);
       g.fillRoundedRect(x, row.y + wobble, row.w, row.h, 3);
-      g.lineStyle(1, line, 0.12);
+      g.lineStyle(1, line, row.alpha - 0.02);
       g.strokeRoundedRect(x, row.y + wobble, row.w, row.h, 3);
     }
   }
@@ -1676,32 +1701,52 @@ function drawPickups(g, pickups, debugView, layout = SECTION_LAYOUTS[1]) {
   }
 }
 
-function drawPreviewSilhouette(g, type, x, y, scale, alpha, zone) {
-  const palette = {
-    skeleton: zone === "warning" ? 0xcfc5a8 : 0x17171b,
-    zombie: zone === "warning" ? 0x5d7653 : 0x172018,
-    ghoul: zone === "warning" ? 0xa74970 : 0x240e19,
-    ogre: zone === "warning" ? 0x493d34 : 0x100e0e,
-  };
-  const color = palette[type] ?? 0x18171a;
-  const w = (type === "ogre" ? 86 : type === "zombie" ? 42 : type === "ghoul" ? 34 : 28) * scale;
-  const h = (type === "ogre" ? 126 : type === "ghoul" ? 58 : type === "skeleton" ? 64 : 76) * scale;
-  g.fillStyle(color, alpha);
-  g.fillEllipse(x, y - h * 0.35, w * 0.62, h * 0.36);
-  g.fillRoundedRect(x - w * 0.5, y - h * 0.2, w, h * 0.62, 8 * scale);
-  g.fillEllipse(x, y + h * 0.42, w * 1.25, h * 0.16);
+function drawPreviewSilhouette(scene, type, x, y, scale, alpha, zone) {
+  if (!scene.silhouetteSprites) scene.silhouetteSprites = [];
+  let sprite;
+  if (scene.silhouetteIndex < scene.silhouetteSprites.length) {
+    sprite = scene.silhouetteSprites[scene.silhouetteIndex];
+    if (!sprite?.scene) {
+      sprite = scene.add.sprite(x, y, "");
+      scene.silhouetteSprites[scene.silhouetteIndex] = sprite;
+    }
+  } else {
+    sprite = scene.add.sprite(x, y, "");
+    scene.silhouetteSprites.push(sprite);
+  }
+  scene.silhouetteIndex++;
+  
+  const textureKey = getEnemyTextureKey(scene, type);
+  sprite.setTexture(textureKey);
+  sprite.setPosition(x, y);
+  
+  const facing = x > 640 ? -1 : 1;
+  const sourceFaces = type === "zombie" ? 1 : -1;
+  sprite.setFlipX(facing !== sourceFaces);
+
+  const baseHeight = type === "ogre" ? 162 : type === "ghoul" ? 108 : type === "zombie" ? 94 : 84;
+  const frameHeight = sprite.frame?.cutHeight || sprite.texture.getSourceImage()?.height || baseHeight;
+  const correctScale = frameHeight ? baseHeight / frameHeight : 1;
+  sprite.setScale(correctScale * scale);
+  
+  sprite.setAlpha(alpha);
+  sprite.setDepth(zone === "warning" ? 15 : 5);
+  
+  // Use regular tint instead of TintFill to preserve texture details
   if (zone === "warning") {
-    g.lineStyle(Math.max(1, 2 * scale), 0xd1b17b, 0.2 + alpha * 0.35);
-    g.strokeEllipse(x, y - h * 0.35, w * 0.68, h * 0.42);
+    // Reddish/aggressive tint when about to spawn
+    sprite.setTint(0xff8877);
+    sprite.setAlpha(Math.min(1, alpha * 1.5));
+  } else {
+    // Deep shadow tint when lurking in the background
+    sprite.setTint(0x3a3a4c);
+    sprite.setAlpha(alpha);
   }
-  if (type === "ogre") {
-    g.lineStyle(6 * scale, 0x100d0d, alpha);
-    g.lineBetween(x - w * 0.52, y - h * 0.02, x - w, y + h * 0.28);
-    g.lineBetween(x + w * 0.52, y - h * 0.02, x + w, y + h * 0.28);
-  }
+  sprite.setVisible(true);
 }
 
-function drawFlankWarning(g, flank) {
+function drawFlankWarning(scene, flank) {
+  const g = scene.warningLayer;
   const p = 1 - flank.timer / flank.maxTimer;
   const x = (flank.x ?? 116) + Math.sin(flank.wobble * 5) * 4;
   g.fillStyle(0x2a1013, 0.32 + p * 0.2);
@@ -1709,7 +1754,7 @@ function drawFlankWarning(g, flank) {
   g.lineStyle(3, 0xd05a47, 0.42 + p * 0.42);
   g.strokeEllipse(x, flank.y, 90 + p * 16, 44 + p * 8);
   for (let i = 0; i < flank.enemies.length; i += 1) {
-    drawPreviewSilhouette(g, flank.enemies[i], x - 26 + i * 24, flank.y + 18 + (i % 2) * 10, 0.52 + p * 0.18, 0.48 + p * 0.25, "warning");
+    drawPreviewSilhouette(scene, flank.enemies[i], x - 26 + i * 24, flank.y + 18 + (i % 2) * 10, 0.52 + p * 0.18, 0.48 + p * 0.25, "warning");
   }
 }
 
@@ -1773,6 +1818,14 @@ function createPlayerAnimations(scene) {
       key: CONCEPT_PLAYER_WALK_ANIM,
       frames: CONCEPT_PLAYER_WALK_FRAMES.map((frame) => ({ key: CONCEPT_PLAYER_TEXTURE, frame })),
       frameRate: 18,
+      repeat: -1,
+    });
+  }
+  if (scene.textures.exists(CONCEPT_PLAYER_TEXTURE) && !scene.anims.exists(CONCEPT_PLAYER_WALK_BACK_ANIM)) {
+    scene.anims.create({
+      key: CONCEPT_PLAYER_WALK_BACK_ANIM,
+      frames: [...CONCEPT_PLAYER_WALK_FRAMES].reverse().map((frame) => ({ key: CONCEPT_PLAYER_TEXTURE, frame })),
+      frameRate: 16,
       repeat: -1,
     });
   }
@@ -1875,9 +1928,10 @@ function updatePlayerSpriteAnimation(scene, sprite, inputState, textureKey, play
   const moving = inputState.left || inputState.right || inputState.up || inputState.down;
   if (moving) {
     if (sprite.texture.key !== CONCEPT_PLAYER_TEXTURE) sprite.setTexture(CONCEPT_PLAYER_TEXTURE);
-    sprite.anims.play(CONCEPT_PLAYER_WALK_ANIM, true);
+    sprite.anims.play(player.backpedaling ? CONCEPT_PLAYER_WALK_BACK_ANIM : CONCEPT_PLAYER_WALK_ANIM, true);
     return;
   }
+  if (sprite.texture.key !== CONCEPT_PLAYER_IDLE_TEXTURE) sprite.setTexture(CONCEPT_PLAYER_IDLE_TEXTURE);
   sprite.anims.play(CONCEPT_PLAYER_IDLE_ANIM, true);
 }
 
@@ -1887,6 +1941,7 @@ function applyPlayerSpritePose(sprite, player, textureKey, depthConfig = SECTION
     sprite.setOrigin(0.5, 0.5);
     sprite.setScale(1.08 * depthScale);
     sprite.setPosition(player.x, player.y - 44);
+    sprite.setAngle(0);
     return;
   }
 
@@ -1896,6 +1951,26 @@ function applyPlayerSpritePose(sprite, player, textureKey, depthConfig = SECTION
   sprite.setOrigin(0.5, 1);
   sprite.setScale(scale * depthScale);
   sprite.setPosition(player.x, player.y + 25);
+  sprite.setAngle(0);
+}
+
+function applyPlayerAimPose(sprite, player, aimPoint, usingMouseAim, inputState, castAnimTimer, staffAttackAnimTimer) {
+  if (!usingMouseAim) return;
+  const dx = aimPoint.x - player.x;
+  const dy = aimPoint.y - player.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 1) return;
+  const aimX = dx / len;
+  const aimY = dy / len;
+  const moving = inputState.left || inputState.right || inputState.up || inputState.down;
+  const actionBoost = castAnimTimer > 0 ? 1.55 : staffAttackAnimTimer > 0 ? 1.18 : 1;
+  const movementEase = moving ? 0.55 : 1;
+  const facing = player.facing || 1;
+  const leanAngle = Phaser.Math.Clamp(aimY * facing * 4.2 * actionBoost * movementEase, -5.5, 5.5);
+  const offsetX = aimX * 3.5 * actionBoost * movementEase;
+  const offsetY = aimY * 2.5 * actionBoost * movementEase;
+  sprite.setAngle(leanAngle);
+  sprite.setPosition(sprite.x + offsetX, sprite.y + offsetY);
 }
 
 function getEnemyTint(enemy) {

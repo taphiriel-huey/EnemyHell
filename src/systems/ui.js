@@ -146,7 +146,7 @@ export function createCardOverlay(scene, cards, onPick) {
     const plate = scene.add.graphics();
     panel(plate, x - 110, 235, 220, 230);
     overlay.add(plate);
-    addFrame(scene, overlay, "uiFrameCardPanel", x - 110, 235, 220, 230, 0.82);
+    const frame = addFrame(scene, overlay, "uiFrameCardPanel", x - 110, 235, 220, 230, 0.82);
     const title = scene.add.text(x, 276, card.title, font(21, "#f2dec0")).setOrigin(0.5, 0);
     const body = scene.add.text(x, 330, card.body, {
       ...font(16, "#cdbb9d"),
@@ -154,12 +154,17 @@ export function createCardOverlay(scene, cards, onPick) {
       wordWrap: { width: 170 },
       align: "center",
     }).setOrigin(0.5, 0);
-    const pick = scene.add.text(x, 426, "NEHMEN", font(15, "#ffe3ad")).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    pick.on("pointerdown", () => {
+    const hit = scene.add.zone(x, 350, 220, 230).setInteractive({ useHandCursor: true });
+    hit.on("pointerover", () => {
+      if (inputLocked || chosen) return;
+      selected = index;
+      drawSelection();
+    });
+    hit.on("pointerdown", () => {
       choose(index);
     });
-    plates.push({ plate, x });
-    overlay.add([title, body, pick]);
+    plates.push({ plate, frame, x });
+    overlay.add([title, body, hit]);
   });
 
   const onKeyDown = (event) => {
@@ -206,9 +211,11 @@ export function createCardOverlay(scene, cards, onPick) {
   }
 
   function drawSelection() {
-    plates.forEach(({ plate, x }, index) => {
+    plates.forEach(({ plate, frame, x }, index) => {
+      const isSelected = !inputLocked && index === selected;
       plate.clear();
-      panel(plate, x - 110, 235, 220, 230, !inputLocked && index === selected);
+      panel(plate, x - 110, 235, 220, 230, isSelected);
+      frame?.setAlpha(isSelected ? 1 : 0.82);
     });
   }
 

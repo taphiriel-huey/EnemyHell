@@ -22,6 +22,7 @@ export function createPlayer() {
     inStaffCombo: false,
     invulnerable: 0,
     facing: 1,
+    backpedaling: false,
   };
 }
 
@@ -46,8 +47,10 @@ export function updatePlayer(player, input, dt, bounds) {
   const len = Math.hypot(rawX, rawY) || 1;
   let moveX = rawX / len;
   let moveY = rawY / len;
+  const backpedaling = rawX !== 0 && input.aimLocked && Math.sign(rawX) !== player.facing;
+  player.backpedaling = backpedaling && player.dashTime <= 0;
 
-  if (moveX !== 0) {
+  if (moveX !== 0 && !input.aimLocked) {
     player.facing = Math.sign(moveX);
     player.dashVector.x = player.facing;
     player.dashVector.y = 0;
@@ -64,7 +67,7 @@ export function updatePlayer(player, input, dt, bounds) {
     input.dash = false;
   }
 
-  const speed = player.dashTime > 0 ? 780 : player.speed;
+  const speed = player.dashTime > 0 ? 780 : player.speed * (backpedaling ? 0.88 : 1);
   if (player.dashTime > 0) {
     moveX = player.dashVector.x;
     moveY = player.dashVector.y;
