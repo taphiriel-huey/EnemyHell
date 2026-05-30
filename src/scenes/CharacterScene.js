@@ -1,22 +1,6 @@
 import { formatRunTime, loadProgress } from "../systems/progress.js";
 import { toggleBlackhavenMusic } from "../systems/audio.js";
-
-const STAT_ROWS = [
-  ["Vitalitaet", "160 HP", "Fehler werden ueberlebt, aber nicht vergeben."],
-  ["Manareserve", "100", "Grosse Zauber bleiben bewusste Momente."],
-  ["Bewegung", "235", "Dash und Raumkontrolle entscheiden den Run."],
-  ["Stabkunst", "4er-Combo", "Notfall, Kontrolle und Mana-Rueckgewinnung."],
-  ["Feuer", "68 Mana / 8.5s", "Ogerbrecher und Panikknopf."],
-  ["Blitz", "34 Mana / 4.0s", "Kleinvieh ausduennen, Ketten nutzen."],
-  ["Frost", "30 Mana / 5.0s", "Zeit kaufen, Gegner vorbereiten."],
-];
-
-const QUICK_STATS = [
-  ["HP", "160"],
-  ["Mana", "100"],
-  ["Tempo", "235"],
-  ["Stab", "4er Combo"],
-];
+import { createDefaultEquipment, getEquipmentCombatRows, getEquipmentQuickStats, getEquipmentSlotRows } from "../systems/equipment.js";
 
 const SECTION_NAMES = {
   1: "Dorfplatz",
@@ -29,13 +13,6 @@ const SECTION_BACKDROPS = {
   2: "blackhavenChurchyardConcept",
   3: "blackhavenForestConcept",
 };
-
-const EQUIPMENT_SLOTS = [
-  ["Stab", "Aschestab", "+ Mana durch Treffer"],
-  ["Robe", "Schwarze Robe", "+ klare Silhouette"],
-  ["Fokus", "Gebrochener Ring", "+ Zauberkontrolle"],
-  ["Relikt", "Leere Fassung", "Spaeter: Run-Boni"],
-];
 
 const START_FOCI = [
   {
@@ -69,6 +46,7 @@ export class CharacterScene extends Phaser.Scene {
 
   create() {
     this.selectedFocusIndex = 0;
+    this.equipment = createDefaultEquipment();
     this.focusCards = [];
     this.progress = loadProgress();
     const { width, height } = this.scale;
@@ -99,6 +77,7 @@ export class CharacterScene extends Phaser.Scene {
     this.scene.start("GameScene", {
       startFocus: START_FOCI[this.selectedFocusIndex].key,
       startSection: this.startSectionId,
+      equipment: this.equipment,
     });
   }
 
@@ -198,7 +177,7 @@ export class CharacterScene extends Phaser.Scene {
     this.add.text(502, 160, "Kampfwerte", font(22, "#f4dfbd"));
     this.add.text(502, 190, "Aktueller Prototyp-Stand", font(13, "#bfa985"));
 
-    QUICK_STATS.forEach(([label, value], index) => {
+    getEquipmentQuickStats(this.equipment).forEach(([label, value], index) => {
       const x = 502 + index * 84;
       g.fillStyle(0x171116, 0.82);
       g.lineStyle(1, 0x6f5638, 0.75);
@@ -211,7 +190,7 @@ export class CharacterScene extends Phaser.Scene {
       }).setOrigin(0.5, 0);
     });
 
-    STAT_ROWS.slice(3).forEach(([label, value, note], index) => {
+    getEquipmentCombatRows(this.equipment).forEach(([label, value, note], index) => {
       const y = 326 + index * 45;
       g.fillStyle(0x0d0c10, 0.58);
       g.fillRoundedRect(502, y - 8, 310, 34, 3);
@@ -229,7 +208,7 @@ export class CharacterScene extends Phaser.Scene {
     panel(g, 470, 560, 385, 106);
     this.add.text(502, 582, "Ausruestung", font(16, "#f4dfbd"));
 
-    EQUIPMENT_SLOTS.forEach(([slot, item, bonus], index) => {
+    getEquipmentSlotRows(this.equipment).forEach(([slot, item, bonus], index) => {
       const x = 502 + index * 84;
       const y = 610;
       g.fillStyle(0x111015, 0.92);

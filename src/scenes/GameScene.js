@@ -5,6 +5,7 @@ import { createSpellState, updateSpellCooldowns, castFireball, castLightning, ca
 import { getCardChoices } from "../systems/cards.js";
 import { createHud, drawHud, createCardOverlay } from "../systems/ui.js";
 import { formatRunTime, recordRunProgress } from "../systems/progress.js";
+import { applyEquipment, createDefaultEquipment } from "../systems/equipment.js";
 
 const BOUNDS = { left: 90, right: 690, top: 380, bottom: 650 };
 const PICKUP_BOUNDS = { left: 90, right: 660, top: 395, bottom: 635 };
@@ -121,6 +122,7 @@ export class GameScene extends Phaser.Scene {
   init(data) {
     this.startFocus = data?.startFocus ?? "pyromantic";
     this.initialSection = data?.startSection ?? 1;
+    this.equipment = data?.equipment ?? createDefaultEquipment();
   }
 
   create() {
@@ -131,6 +133,7 @@ export class GameScene extends Phaser.Scene {
     this.player.x = this.layout.playerStart.x;
     this.player.y = this.layout.playerStart.y;
     this.spells = createSpellState();
+    applyEquipment(this.player, this.spells, this.equipment);
     this.waves = createWaveSystem(this.section);
     this.enemies = [];
     this.pickups = [];
@@ -615,8 +618,9 @@ export class GameScene extends Phaser.Scene {
       const progress = Phaser.Math.Clamp(1 - item.depth / 680, 0, 1);
       const warningProgress = Phaser.Math.Clamp((progress - 0.56) / 0.44, 0, 1);
       const isWarning = progress >= 0.56;
+      const spawnX = item.spawnX ?? this.waves.rightSpawnX ?? 845;
       const x = isWarning
-        ? Phaser.Math.Linear(950, 795, warningProgress)
+        ? Phaser.Math.Linear(960, spawnX, warningProgress)
         : Phaser.Math.Linear(1190, 960, progress / 0.56);
       const y = item.y - (isWarning ? 30 * (1 - progress) : 105 * (1 - progress));
       const scale = item.scale * (isWarning
@@ -1285,7 +1289,7 @@ export class GameScene extends Phaser.Scene {
       color: "#bfa985",
     }).setOrigin(0.5).setDepth(depth + 2);
 
-    const retry = createEndButton(this, 526, 574, "NOCHMAL", depth + 2, () => this.scene.restart({ startFocus: this.startFocus }));
+    const retry = createEndButton(this, 526, 574, "NOCHMAL", depth + 2, () => this.scene.restart({ startFocus: this.startFocus, startSection: this.initialSection, equipment: this.equipment }));
     const prep = createEndButton(this, 754, 574, "VORBEREITUNG", depth + 2, () => this.scene.start("CharacterScene"));
     this.input.keyboard.once("keydown-R", () => retry.action());
     this.input.keyboard.once("keydown-ENTER", () => retry.action());

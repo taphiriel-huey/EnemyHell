@@ -64,6 +64,8 @@ export function updatePlayer(player, input, dt, bounds) {
     player.dashCooldown = 0.82;
     player.dashTime = 0.16;
     player.invulnerable = 0.2;
+    player.dashVector.x = rawX !== 0 || rawY !== 0 ? moveX : player.facing;
+    player.dashVector.y = rawX !== 0 || rawY !== 0 ? moveY : 0;
     input.dash = false;
   }
 
